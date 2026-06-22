@@ -4,73 +4,224 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HopWire Privacy Policy</title>
+    <style>
+        :root {
+            --ink: #1a1a1f;
+            --muted: #5c5c66;
+            --line: #e4e4ea;
+            --accent: #6b4fd8;
+            --bg: #ffffff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrap {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 64px 24px 96px;
+        }
+        header {
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 28px;
+            margin-bottom: 40px;
+        }
+        h1 {
+            font-size: 2rem;
+            margin: 0 0 8px;
+            letter-spacing: -0.02em;
+        }
+        .updated {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        h2 {
+            font-size: 1.2rem;
+            margin: 44px 0 12px;
+            letter-spacing: -0.01em;
+        }
+        h3 {
+            font-size: 1rem;
+            margin: 24px 0 8px;
+            color: var(--ink);
+        }
+        p { margin: 0 0 16px; color: #2a2a32; }
+        ul { margin: 0 0 16px; padding-left: 22px; }
+        li { margin-bottom: 8px; color: #2a2a32; }
+        strong { color: var(--ink); }
+        a { color: var(--accent); }
+        .intro {
+            font-size: 1.05rem;
+            color: var(--muted);
+        }
+        .fb-callout {
+            background: #f6f4ff;
+            border: 1px solid #e4ddff;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 16px 0 24px;
+        }
+        .fb-callout h3 { margin-top: 0; }
+        footer {
+            margin-top: 56px;
+            padding-top: 24px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>HopWire Privacy Policy</h1>
-    <p>Last updated: June 2026</p>
-    <p>HopWire connects to your Facebook Page to import your events...</p>
-    <p>1.Introduction
-Welcome to HopWire ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use the HopWire mobile application and website (collectively, the "Service"). Please read this policy carefully. If you disagree with its terms, please discontinue use of the Service. 
+    <div class="wrap">
+        <header>
+            <h1>HopWire Privacy Policy</h1>
+            <p class="updated">Last updated: June 2026</p>
+        </header>
 
-2. Information We Collect
-Information You Provide Directly
+        <p class="intro">
+            Welcome to HopWire ("we," "our," or "us"). We are committed to protecting your
+            personal information and your right to privacy. This Privacy Policy explains how we
+            collect, use, disclose, and safeguard your information when you use the HopWire mobile
+            application and website (collectively, the "Service"). Please read this policy carefully.
+            If you disagree with its terms, please discontinue use of the Service.
+        </p>
 
-‍Account Information: Name, email city, age, and password when you register. 
-Profile Information: Profile photo, bio, and any other details you choose to add. 
-User Content: Messages, photos, and other content you submit to the community. 
-Payment Information: If you upgrade to a paid tier, billing details are collected and processed by our third-party payment processor. We do not store your full payment card details. Communications: Messages you send us directly, such as support requests or feedback.  
+        <h2>1. Information We Collect</h2>
 
-Information Collected Automatically
+        <h3>Information You Provide Directly</h3>
+        <ul>
+            <li><strong>Account Information:</strong> Name, email, city, age, and password when you register.</li>
+            <li><strong>Profile Information:</strong> Profile photo, bio, and any other details you choose to add.</li>
+            <li><strong>User Content:</strong> Messages, photos, and other content you submit to the community.</li>
+            <li><strong>Payment Information:</strong> If you are a brewery owner, billing details are collected and processed by our third-party payment processor. We do not store your full payment card details.</li>
+            <li><strong>Communications:</strong> Messages you send us directly, such as support requests or feedback.</li>
+        </ul>
 
-‍Usage Data: Pages viewed, features used, time spent in the app, and interactions with content. 
-Device Information: Device type, operating system, unique device identifiers, and mobile network information. 
-Log Data: IP address, browser type, referring URLs, and crash reports. 
-Cookies & Tracking Technologies: We use cookies and similar technologies to operate and improve the Service. See our Cookie Policy for more details.  
+        <h3>Information Collected Automatically</h3>
+        <ul>
+            <li><strong>Usage Data:</strong> Pages viewed, features used, time spent in the app, and interactions with content.</li>
+            <li><strong>Device Information:</strong> Device type, operating system, unique device identifiers, and mobile network information.</li>
+            <li><strong>Log Data:</strong> IP address, browser type, referring URLs, and crash reports.</li>
+            <li><strong>Cookies &amp; Tracking Technologies:</strong> We use cookies and similar technologies to operate and improve the Service.</li>
+        </ul>
 
-Information from Third Parties
+        <h3>Information from Third Parties</h3>
+        <p>
+            If you register or log in using a third-party service (such as Apple or Google), we may
+            receive basic profile information from that provider in accordance with their privacy policies.
+        </p>
 
-If you register or log in using a third-party service (such as Apple or Google), we may receive basic profile information from that provider in accordance with their privacy policies.  
+        <div class="fb-callout">
+            <h3>Facebook Page Integration</h3>
+            <p>
+                If you are a brewery or business and choose to connect your Facebook Page to HopWire,
+                we access certain information through Facebook's Graph API, with your permission, in order
+                to import your events into HopWire. Specifically, we collect:
+            </p>
+            <ul>
+                <li><strong>Page identity:</strong> The list of Facebook Pages you manage and the name and ID of the Page you connect.</li>
+                <li><strong>Page access token:</strong> A secure token that allows HopWire to read the connected Page's content on your behalf. This token is stored securely and used only to retrieve your events.</li>
+                <li><strong>Event data:</strong> Event titles, descriptions, dates and times, and cover images posted on your connected Page.</li>
+            </ul>
+            <p>
+                We use this information solely to display your Facebook events within HopWire alongside
+                events you create directly. We do not post to your Facebook Page, modify your Page, or
+                access personal profile content beyond what is described here. You can disconnect your
+                Facebook Page at any time, and you may request deletion of imported data and your stored
+                access token by contacting us at <a href="mailto:info@hopwire.app">info@hopwire.app</a>.
+            </p>
+        </div>
 
-3. How We Use Your Information
-We use the information we collect to:  Create and manage your account Provide, operate, and improve the Service Personalize your experience and surface relevant community content Process transactions and manage your subscription Send you service-related notices, updates, and security alerts Respond to your comments, questions, and support requests Monitor and enforce our Community Guidelines and Terms of Service Detect, investigate, and prevent fraudulent or unauthorized activity Comply with legal obligations  
+        <h2>2. How We Use Your Information</h2>
+        <p>We use the information we collect to:</p>
+        <ul>
+            <li>Create and manage your account</li>
+            <li>Provide, operate, and improve the Service</li>
+            <li>Personalize your experience and surface relevant community content</li>
+            <li>Import and display events from your connected Facebook Page</li>
+            <li>Process transactions and manage your subscription</li>
+            <li>Send you service-related notices, updates, and security alerts</li>
+            <li>Respond to your comments, questions, and support requests</li>
+            <li>Monitor and enforce our Community Guidelines and Terms of Service</li>
+            <li>Detect, investigate, and prevent fraudulent or unauthorized activity</li>
+            <li>Comply with legal obligations</li>
+        </ul>
 
-4. How We Share Your Information
-We do not sell your personal information. We may share your information in the following limited circumstances:  
-Service Providers: We work with trusted third-party vendors (e.g., hosting, analytics, payment processing, email delivery) who access your data only to perform services on our behalf. 
-Other Users: Content you post publicly on HopWire (messages, photos, profile information) is visible to other users of the Service. 
-Legal Requirements: We may disclose your information if required by law, subpoena, or other legal process, or if we believe disclosure is necessary to protect our rights or the safety of others. 
-Business Transfers: If HopWire is involved in a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction. We will notify you before your data becomes subject to a different privacy policy.  
+        <h2>3. How We Share Your Information</h2>
+        <p>We do not sell your personal information. We may share your information in the following limited circumstances:</p>
+        <ul>
+            <li><strong>Service Providers:</strong> We work with trusted third-party vendors (e.g., hosting, analytics, payment processing, email delivery) who access your data only to perform services on our behalf.</li>
+            <li><strong>Other Users:</strong> Content you post publicly on HopWire (messages, photos, profile information) is visible to other users of the Service.</li>
+            <li><strong>Legal Requirements:</strong> We may disclose your information if required by law, subpoena, or other legal process, or if we believe disclosure is necessary to protect our rights or the safety of others.</li>
+            <li><strong>Business Transfers:</strong> If HopWire is involved in a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction. We will notify you before your data becomes subject to a different privacy policy.</li>
+        </ul>
 
-5. Data Retention
-We retain your personal information for as long as your account is active or as needed to provide the Service. If you delete your account, we will delete or anonymize your personal data within 30 days, except where we are required to retain it for legal or legitimate business purposes. 
+        <h2>4. Data Retention</h2>
+        <p>
+            We retain your personal information for as long as your account is active or as needed to
+            provide the Service. If you delete your account, we will delete or anonymize your personal
+            data within 30 days, except where we are required to retain it for legal or legitimate
+            business purposes. Facebook Page access tokens and imported event data are deleted when you
+            disconnect your Page or delete your account.
+        </p>
 
-6. Your Choices and Rights
-You have the following rights regarding your personal information:  
-Access & Correction: You can review and update your account information at any time through your profile settings. 
-Account Deletion:You may delete your account by sending us an email with the request. We would then remove your profile and content from the Service.
+        <h2>5. Your Choices and Rights</h2>
+        <ul>
+            <li><strong>Access &amp; Correction:</strong> You can review and update your account information at any time through your profile settings.</li>
+            <li><strong>Account Deletion:</strong> You may delete your account by sending us an email with the request. We would then remove your profile and content from the Service.</li>
+            <li><strong>Disconnect Facebook:</strong> You may disconnect your Facebook Page at any time, which stops further event imports and allows you to request deletion of your stored access token.</li>
+            <li><strong>Opt-Out of Marketing Emails:</strong> You can unsubscribe from promotional emails using the link at the bottom of any such email.</li>
+            <li><strong>Do Not Track:</strong> Some browsers include a "Do Not Track" feature. We currently do not respond to Do Not Track signals, but we do not sell your data to third parties.</li>
+        </ul>
 
-Opt-Out of Marketing Emails: You can unsubscribe from promotional emails using the link at the bottom of any such email. 
-Do Not Track: Some browsers include a "Do Not Track" feature. We currently do not respond to Do Not Track signals, but we do not sell your data to third parties.  
+        <h2>6. Children's Privacy</h2>
+        <p>
+            HopWire is not intended for people under the age of 21. We do not knowingly collect personal
+            information from people under 21. If we become aware that a person under 21 has provided us
+            with personal information, we will delete it promptly and delete their account. If you believe
+            a person under 21 has submitted information to us, please contact us at
+            <a href="mailto:info@hopwire.app">info@hopwire.app</a>.
+        </p>
 
-7. Children's Privacy
-HopWire is not intended for people under the age of 21. We do not knowingly collect personal information from people under 21. If we become aware that a person under 21 has provided us with personal information, we will delete it promptly and delete their account. If you believe a person under 21 has submitted information to us, please contact us at info@hopwire.app. 
+        <h2>7. Security</h2>
+        <p>
+            We implement reasonable technical and organizational measures to protect your information from
+            unauthorized access, loss, or misuse. However, no method of transmission over the internet or
+            electronic storage is 100% secure, and we cannot guarantee absolute security.
+        </p>
 
-8. Security
-We implement reasonable technical and organizational measures to protect your information from unauthorized access, loss, or misuse. However, no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security. 
+        <h2>8. Third-Party Links</h2>
+        <p>
+            The Service may contain links to third-party websites or services. We are not responsible for
+            the privacy practices of those third parties and encourage you to review their privacy policies.
+        </p>
 
-9. Third-Party Links
-The Service may contain links to third-party websites or services. We are not responsible for the privacy practices of those third parties and encourage you to review their privacy policies. 
+        <h2>9. Changes to This Policy</h2>
+        <p>
+            We may update this Privacy Policy from time to time. When we do, we will revise the "Last
+            updated" date at the top of this page. For significant changes, we will notify you via email or
+            a prominent notice within the app. Your continued use of the Service after changes are posted
+            constitutes your acceptance of the updated policy.
+        </p>
 
-10. Changes to This Policy
-We may update this Privacy Policy from time to time. When we do, we will revise the "Last Updated" date at the top of this page. For significant changes, we will notify you via email or a prominent notice within the app. Your continued use of the Service after changes are posted constitutes your acceptance of the updated policy. 
+        <h2>10. Contact Us</h2>
+        <p>
+            If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us at:
+        </p>
+        <p>
+            <strong>HopWire</strong><br>
+            Email: <a href="mailto:info@hopwire.app">info@hopwire.app</a>
+        </p>
 
-11. Contact Us
-If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us at: 
-HopWire Email: info@hopwire.app
-
-
-Edit Site Footer
-Bucher Systems LLC
-Made with Squarespace </p>
+        <footer>
+            Bucher Systems LLC
+        </footer>
+    </div>
 </body>
 </html>
