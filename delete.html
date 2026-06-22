@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HopWire — Data Deletion</title>
+    <style>
+        :root {
+            --ink: #1a1a1f;
+            --muted: #5c5c66;
+            --line: #e4e4ea;
+            --accent: #6b4fd8;
+            --bg: #ffffff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrap { max-width: 680px; margin: 0 auto; padding: 40px 24px 96px; }
+        .topnav { font-size: 0.9rem; margin-bottom: 32px; }
+        .topnav a { color: var(--accent); text-decoration: none; }
+        .topnav a:hover { text-decoration: underline; }
+        header { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 40px; }
+        h1 { font-size: 2rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+        .updated { color: var(--muted); font-size: 0.9rem; margin: 0; }
+        h2 { font-size: 1.2rem; margin: 40px 0 12px; }
+        p { margin: 0 0 16px; color: #2a2a32; }
+        ol, ul { margin: 0 0 16px; padding-left: 22px; }
+        li { margin-bottom: 10px; color: #2a2a32; }
+        strong { color: var(--ink); }
+        a { color: var(--accent); }
+        .step-box {
+            background: #f6f4ff;
+            border: 1px solid #e4ddff;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 16px 0 24px;
+        }
+        .email {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+        footer {
+            margin-top: 56px; padding-top: 24px;
+            border-top: 1px solid var(--line);
+            color: var(--muted); font-size: 0.85rem;
+            display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+        }
+        footer a { color: var(--muted); }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <nav class="topnav"><a href="index.html">← Back to HopWire</a></nav>
+
+        <header>
+            <h1>Data Deletion Request</h1>
+            <p class="updated">Last updated: June 2026</p>
+        </header>
+
+        <p>
+            You can request deletion of your HopWire account and all associated personal data at any time.
+            This includes your profile, content, and — if you are a brewery — any connected Facebook Page,
+            its stored access token, and events imported from it.
+        </p>
+
+        <h2>How to request deletion</h2>
+        <div class="step-box">
+            <p>Email us at:</p>
+            <p class="email"><a href="mailto:info@hopwire.app?subject=Delete%20My%20Account">info@hopwire.app</a></p>
+            <p style="margin-bottom:0;">with the subject line <strong>"Delete My Account."</strong></p>
+        </div>
+
+        <p>Please send the request from the email address associated with your HopWire account so we can verify your identity. In your message, let us know:</p>
+        <ul>
+            <li>The email or account name you used to register</li>
+            <li>If applicable, the name of the Facebook Page you connected</li>
+        </ul>
+
+        <h2>What happens next</h2>
+        <p>
+            Once we verify your request, we will delete or anonymize your personal data within <strong>30 days</strong>,
+            except where we are required to retain certain information for legal or legitimate business
+            purposes. This includes removing any stored Facebook Page access token and any events imported
+            from your Facebook Page.
+        </p>
+
+        <h2>Disconnecting Facebook only</h2>
+        <p>
+            If you only want to stop importing Facebook events without deleting your HopWire account, email
+            us at <a href="mailto:info@hopwire.app">info@hopwire.app</a> and we will disconnect your Page and
+            remove its stored access token.
+        </p>
+
+        <p>For more detail on how we handle your data, see our <a href="privacy.html">Privacy Policy</a>.</p>
+
+        <footer>
+            <span>Bucher Systems LLC</span>
+            <span><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms</a> · <a href="index.html">Home</a></span>
+        </footer>
+    </div>
+</body>
+</html>
