@@ -1,1 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HopWire — Founding Brewery Partner Program</title>
+    <style>
+        :root {
+            --ink: #16161a;
+            --muted: #65646e;
+            --accent: #6b4fd8;
+            --accent-soft: #f4f1ff;
+            --amber: #e8a13c;
+            --bg: #faf8f5;
+            --card: #ffffff;
+            --line: #ececf2;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
 
+        /* HERO */
+        .hero {
+            text-align: center;
+            padding: 96px 24px 64px;
+            background:
+                radial-gradient(120% 80% at 50% 0%, #f4f1ff 0%, rgba(244,241,255,0) 60%),
+                var(--bg);
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 18px;
+        }
+
+        h1 .accent { color: var(--accent); }
+
+        .sub {
+            color: var(--muted);
+            max-width: 52ch;
+            margin: 0 auto 28px;
+            font-size: 1.1rem;
+        }
+
+        .cta {
+            display: inline-block;
+            background: var(--ink);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 14px 26px;
+            border-radius: 999px;
+        }
+
+        .cta:hover { background: #000; }
+
+        /* SECTIONS */
+        .section {
+            padding: 48px 0;
+        }
+
+        .section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+        }
+
+        .section p {
+            color: var(--muted);
+        }
+
+        /* PRICING */
+        .pricing {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .price-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .price-card h3 {
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+
+        .price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        /* FEATURES */
+        .list {
+            margin-top: 10px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .item {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px 16px;
+            color: var(--muted);
+        }
+
+        /* ALERT BOX */
+        .highlight {
+            background: var(--accent-soft);
+            border: 1px solid #e6e0ff;
+            padding: 18px;
+            border-radius: 16px;
+            margin-top: 14px;
+            color: var(--ink);
+        }
+
+        .highlight strong {
+            color: var(--accent);
+        }
+
+        footer {
+            border-top: 1px solid var(--line);
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="wrap">
+            <div class="logo">HopWire</div>
+            <h1>Founding <span class="accent">Brewery Partner</span> Program</h1>
+            <p class="sub">
+                Join HopWire at launch and lock in lifetime pricing while helping shape a platform
+                built specifically for breweries and their communities.
+            </p>
+            <a class="cta" href="mailto:jbucher@hopwire.app">Join the Launch</a>
+        </div>
+    </section>
+
+    <div class="wrap">
+
+        <!-- OVERVIEW -->
+        <div class="section">
+            <h2>What is HopWire?</h2>
+            <p>
+                HopWire is a centralized platform for brewery events, releases, and promotions.
+                It helps customers discover what’s happening locally while giving breweries a simple way
+                to manage and share everything in one place.
+            </p>
+        </div>
+
+        <!-- PRICING -->
+        <div class="section">
+            <h2>Simple Pricing</h2>
+            <p>Pricing is based on the number of brewery locations under one organization.</p>
+
+            <div class="pricing">
+                <div class="price-card">
+                    <h3>1 Location</h3>
+                    <div class="price">$99/mo</div>
+                </div>
+                <div class="price-card">
+                    <h3>2–5 Locations</h3>
+                    <div class="price">$199/mo</div>
+                </div>
+                <div class="price-card">
+                    <h3>6–10 Locations</h3>
+                    <div class="price">$299/mo</div>
+                </div>
+                <div class="price-card">
+                    <h3>11+ Locations</h3>
+                    <div class="price">$499/mo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOUNDERS -->
+        <div class="section">
+            <h2>Founding Brewery Benefits</h2>
+
+            <div class="highlight">
+                <p><strong>Founding Breweries receive:</strong></p>
+                <div class="list">
+                    <div class="item">Free access through December 31, 2026</div>
+                    <div class="item">Locked-in pricing for life while subscription remains active</div>
+                    <div class="item">Full access to all current and future core features</div>
+                    <div class="item">Priority onboarding during launch</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAUNCH -->
+        <div class="section">
+            <h2>Launch Details</h2>
+            <p>
+                HopWire is launching late July to early August. Founding breweries will be given a short
+                enrollment window at launch to secure lifetime pricing.
+            </p>
+
+            <div class="highlight">
+                <p>
+                    To participate, email <strong>jbucher@hopwire.app</strong> and include your brewery name and number of locations.
+                    Once launch begins, you’ll receive instructions to complete setup within the enrollment window.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        © 2026 Bucher Systems LLC · HopWire
+    </footer>
+
+</body>
+</html>
