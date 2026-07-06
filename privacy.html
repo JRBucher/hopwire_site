@@ -68,13 +68,25 @@
             margin: 16px 0 24px;
         }
         .fb-callout h3 { margin-top: 0; }
+        /* Footer */
         footer {
-            margin-top: 56px;
-            padding-top: 24px;
             border-top: 1px solid var(--line);
-            color: var(--muted);
-            font-size: 0.85rem;
+            padding: 40px 24px 56px;
+            text-align: center;
         }
+        .links {
+            display: flex; gap: 28px; justify-content: center; flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .links a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        .links a:hover { text-decoration: underline; }
+        .legal { color: var(--muted); font-size: 0.82rem; }
+        .legal a { color: var(--muted); }
     </style>
 </head>
 <body>
