@@ -96,14 +96,25 @@
         color:var(--muted);
     }
     
-    /* FOOTER */
-    footer{
-        text-align:center;
-        padding:40px 24px;
-        border-top:1px solid var(--line);
-        font-size:0.85rem;
-        color:var(--muted);
-    }
+    /* Footer */
+        footer {
+            border-top: 1px solid var(--line);
+            padding: 40px 24px 56px;
+            text-align: center;
+        }
+        .links {
+            display: flex; gap: 28px; justify-content: center; flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .links a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        .links a:hover { text-decoration: underline; }
+        .legal { color: var(--muted); font-size: 0.82rem; }
+        .legal a { color: var(--muted); }
     </style>
 </head>
 
