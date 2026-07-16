@@ -1,1 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HopWire — App Screenshots</title>
+    <style>
+        :root {
+            --ink: #16161a;
+            --muted: #65646e;
+            --accent: #6b4fd8;
+            --accent-soft: #f4f1ff;
+            --bg: #faf8f5;
+            --card: #ffffff;
+            --line: #ececf2;
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .wrap {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 96px 24px 72px;
+            background:
+                radial-gradient(120% 80% at 50% 0%, #f4f1ff 0%, rgba(244,241,255,0) 60%),
+                var(--bg);
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.01em;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: clamp(2.2rem, 6vw, 3.4rem);
+            letter-spacing: -0.03em;
+            line-height: 1.08;
+            max-width: 16ch;
+            margin: 0 auto 20px;
+        }
+
+        h1 .accent {
+            color: var(--accent);
+        }
+
+        .sub {
+            font-size: 1.15rem;
+            color: var(--muted);
+            max-width: 46ch;
+            margin: 0 auto;
+        }
+
+        /* Screenshot rows */
+        .shots {
+            padding: 24px 0 48px;
+        }
+
+        .shot-row {
+            display: flex;
+            align-items: center;
+            gap: 56px;
+            margin-bottom: 88px;
+        }
+
+        .shot-row:last-child {
+            margin-bottom: 48px;
+        }
+
+        /* Every other row flips sides */
+        .shot-row:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .shot-media {
+            flex: 0 0 300px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Phone frame around each screenshot */
+        .phone {
+            width: 280px;
+            border-radius: 36px;
+            padding: 12px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            box-shadow: 0 24px 48px -20px rgba(22, 22, 26, 0.18);
+        }
+
+        .phone img {
+            display: block;
+            width: 100%;
+            border-radius: 26px;
+            background: var(--accent-soft);
+            aspect-ratio: 9 / 19.5;
+            object-fit: cover;
+        }
+
+        .shot-text {
+            flex: 1;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.82rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 999px;
+            margin-bottom: 16px;
+        }
+
+        .shot-text h2 {
+            font-size: 1.75rem;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin-bottom: 12px;
+        }
+
+        .shot-text p {
+            color: var(--muted);
+            font-size: 1.05rem;
+            max-width: 42ch;
+        }
+
+        /* Closing CTA */
+        .closing {
+            text-align: center;
+            padding: 24px 24px 88px;
+        }
+
+        .closing h2 {
+            font-size: 1.6rem;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+        }
+
+        .cta {
+            display: inline-block;
+            background: var(--ink);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 14px 28px;
+            border-radius: 999px;
+            transition: transform .15s ease, background .15s ease;
+        }
+
+        .cta:hover {
+            transform: translateY(-1px);
+            background: #000;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--line);
+            padding: 40px 24px 56px;
+            text-align: center;
+        }
+
+        .links {
+            display: flex;
+            gap: 28px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .links a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .legal {
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        /* Mobile: stack image above text */
+        @media (max-width: 720px) {
+            .shot-row,
+            .shot-row:nth-child(even) {
+                flex-direction: column;
+                gap: 28px;
+                margin-bottom: 64px;
+                text-align: center;
+            }
+
+            .shot-text p {
+                margin: 0 auto;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .cta {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+
+
+<body>
+
+<section class="hero">
+    <div class="wrap">
+
+        <div class="logo">
+            HopWire
+        </div>
+
+        <h1>
+            A look <span class="accent">inside</span> the app.
+        </h1>
+
+        <p class="sub">
+            From discovering nearby breweries to managing your taproom,
+            here's what HopWire looks like in action.
+        </p>
+
+    </div>
+</section>
+
+
+<section class="shots">
+    <div class="wrap">
+
+        <!-- Replace each src="" with your actual screenshot file -->
+
+        <div class="shot-row">
+            <div class="shot-media">
+                <div class="phone">
+                    <img src="screenshots/discover.png" alt="HopWire discover screen showing nearby breweries">
+                </div>
+            </div>
+            <div class="shot-text">
+                <span class="eyebrow">Discover</span>
+                <h2>Find breweries near you</h2>
+                <p>
+                    Browse taprooms in your area, see what's pouring right now,
+                    and save your favorites so you never miss a new release.
+                </p>
+            </div>
+        </div>
+
+        <div class="shot-row">
+            <div class="shot-media">
+                <div class="phone">
+                    <img src="screenshots/taplist.png" alt="HopWire tap list screen">
+                </div>
+            </div>
+            <div class="shot-text">
+                <span class="eyebrow">Tap Lists</span>
+                <h2>Live tap lists, always current</h2>
+                <p>
+                    Breweries update their lineup in seconds, so what you see in
+                    the app is exactly what's behind the bar.
+                </p>
+            </div>
+        </div>
+
+        <div class="shot-row">
+            <div class="shot-media">
+                <div class="phone">
+                    <img src="screenshots/events.png" alt="HopWire events screen">
+                </div>
+            </div>
+            <div class="shot-text">
+                <span class="eyebrow">Events</span>
+                <h2>Never miss a release night</h2>
+                <p>
+                    Trivia, food trucks, can drops — follow a brewery and get
+                    notified when something's happening at your local spot.
+                </p>
+            </div>
+        </div>
+
+        <div class="shot-row">
+            <div class="shot-media">
+                <div class="phone">
+                    <img src="screenshots/dashboard.png" alt="HopWire brewery partner dashboard">
+                </div>
+            </div>
+            <div class="shot-text">
+                <span class="eyebrow">For Breweries</span>
+                <h2>Your taproom, in your pocket</h2>
+                <p>
+                    Partner breweries manage taps, post events, and reach nearby
+                    beer lovers from one simple dashboard.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+<div class="closing">
+    <h2>Ready to pour?</h2>
+    <a class="cta" href="launch.html">
+        Become a Founding Brewery Partner
+    </a>
+</div>
+
+
+<footer>
+
+    <div class="links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="delete.html">Data Deletion Policy</a>
+        <a href="mailto:info@hopwire.app">Contact</a>
+        <a href="launch.html">Founding Brewery Partner Program</a>
+    </div>
+
+    <p class="legal">
+        © 2026 Bucher Systems LLC · HopWire
+    </p>
+
+</footer>
+
+
+</body>
+</html>
