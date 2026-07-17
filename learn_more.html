@@ -15,12 +15,6 @@
             --line: #ececf2;
         }
 
-        box {
-            width: "100%";
-            height: "100px";
-            background: "purple";
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
@@ -36,7 +30,7 @@
         }
 
         .wrap {
-            max-width: 880px;
+            max-width: 980px;
             margin: 0 auto;
             padding: 0 24px;
         }
@@ -79,47 +73,48 @@
             margin: 0 auto;
         }
 
-        /* Screenshot rows */
-        .shots {
-            padding: 24px 0 48px;
+        /* Screenshot sections — each is full-width so backgrounds can alternate */
+        .shot-section {
+            padding: 72px 0;
+            background: var(--card); /* white by default */
+        }
+
+        /* Every other section gets the purple */
+        .shot-section:nth-of-type(even) {
+            background: var(--accent-soft);
         }
 
         .shot-row {
             display: flex;
             align-items: center;
-            gap: 56px;
-            margin-bottom: 88px;
+            gap: 64px;
         }
 
-        .shot-row:last-child {
-            margin-bottom: 48px;
-        }
-
-        /* Every other row flips sides */
-        .shot-row:nth-child(even) {
+        /* Every other section also flips image/text sides */
+        .shot-section:nth-of-type(even) .shot-row {
             flex-direction: row-reverse;
         }
 
         .shot-media {
-            flex: 0 0 300px;
+            flex: 0 0 380px;
             display: flex;
             justify-content: center;
         }
 
-        /* Phone frame around each screenshot */
+        /* Bigger phone frame */
         .phone {
-            width: 280px;
-            border-radius: 36px;
-            padding: 12px;
+            width: 360px;
+            border-radius: 44px;
+            padding: 14px;
             background: var(--card);
             border: 1px solid var(--line);
-            box-shadow: 0 24px 48px -20px rgba(22, 22, 26, 0.18);
+            box-shadow: 0 28px 56px -22px rgba(22, 22, 26, 0.22);
         }
 
         .phone img {
             display: block;
             width: 100%;
-            border-radius: 26px;
+            border-radius: 32px;
             background: var(--accent-soft);
             aspect-ratio: 9 / 19.5;
             object-fit: cover;
@@ -142,8 +137,13 @@
             margin-bottom: 16px;
         }
 
+        /* On purple sections, flip the eyebrow so it still stands out */
+        .shot-section:nth-of-type(even) .eyebrow {
+            background: var(--card);
+        }
+
         .shot-text h2 {
-            font-size: 1.75rem;
+            font-size: 1.9rem;
             letter-spacing: -0.02em;
             line-height: 1.15;
             margin-bottom: 12px;
@@ -158,7 +158,7 @@
         /* Closing CTA */
         .closing {
             text-align: center;
-            padding: 24px 24px 88px;
+            padding: 72px 24px 88px;
         }
 
         .closing h2 {
@@ -214,14 +214,35 @@
             font-size: 0.82rem;
         }
 
+        /* Tablet: slightly smaller phone so text still has room */
+        @media (max-width: 900px) {
+            .shot-media {
+                flex-basis: 320px;
+            }
+            .phone {
+                width: 300px;
+            }
+        }
+
         /* Mobile: stack image above text */
         @media (max-width: 720px) {
             .shot-row,
-            .shot-row:nth-child(even) {
+            .shot-section:nth-of-type(even) .shot-row {
                 flex-direction: column;
-                gap: 28px;
-                margin-bottom: 64px;
+                gap: 32px;
                 text-align: center;
+            }
+
+            .shot-section {
+                padding: 56px 0;
+            }
+
+            .shot-media {
+                flex-basis: auto;
+            }
+
+            .phone {
+                width: min(320px, 84vw);
             }
 
             .shot-text p {
@@ -260,11 +281,10 @@
 </section>
 
 
-<section class="shots">
+<!-- Replace each src="" with your actual screenshot file -->
+
+<section class="shot-section">
     <div class="wrap">
-
-        <!-- Replace each src="" with your actual screenshot file -->
-
         <div class="shot-row">
             <div class="shot-media">
                 <div class="phone">
@@ -280,11 +300,15 @@
                 </p>
             </div>
         </div>
+    </div>
+</section>
 
+<section class="shot-section">
+    <div class="wrap">
         <div class="shot-row">
             <div class="shot-media">
                 <div class="phone">
-                    <img src="AllMessages.PNG" alt="HopWire tap list screen">
+                    <img src="AllMessages.PNG" alt="HopWire messages screen">
                 </div>
             </div>
             <div class="shot-text">
@@ -295,12 +319,15 @@
                 </p>
             </div>
         </div>
+    </div>
+</section>
 
-        <div class="box">
+<section class="shot-section">
+    <div class="wrap">
         <div class="shot-row">
             <div class="shot-media">
                 <div class="phone">
-                    <img src="Conversation.PNG" alt="HopWire events screen">
+                    <img src="Conversation.PNG" alt="HopWire chat conversation screen">
                 </div>
             </div>
             <div class="shot-text">
@@ -311,8 +338,11 @@
                 </p>
             </div>
         </div>
-        </div>
+    </div>
+</section>
 
+<section class="shot-section">
+    <div class="wrap">
         <div class="shot-row">
             <div class="shot-media">
                 <div class="phone">
@@ -323,12 +353,16 @@
                 <span class="eyebrow">For Events</span>
                 <h2>Plan Ahead With Events</h2>
                 <p>
-                    Stay organized with a monthly view of upcoming brewery events. Quickly see what’s happening and plan your next outing.
+                    Stay organized with a monthly view of upcoming brewery events. Quickly see what's happening and plan your next outing.
                 </p>
             </div>
         </div>
+    </div>
+</section>
 
-         <div class="shot-row">
+<section class="shot-section">
+    <div class="wrap">
+        <div class="shot-row">
             <div class="shot-media">
                 <div class="phone">
                     <img src="IMG_1760.PNG" alt="HopWire map dashboard">
@@ -342,8 +376,12 @@
                 </p>
             </div>
         </div>
+    </div>
+</section>
 
-         <div class="shot-row">
+<section class="shot-section">
+    <div class="wrap">
+        <div class="shot-row">
             <div class="shot-media">
                 <div class="phone">
                     <img src="IMG_1761.PNG" alt="HopWire brewery home page dashboard">
@@ -353,11 +391,15 @@
                 <span class="eyebrow">For Breweries</span>
                 <h2>Your Brewery Command Center</h2>
                 <p>
-                    Manage your brewery’s events and keep your community engaged. The brewery dashboard makes creating and sharing events simple.
+                    Manage your brewery's events and keep your community engaged. The brewery dashboard makes creating and sharing events simple.
                 </p>
             </div>
         </div>
+    </div>
+</section>
 
+<section class="shot-section">
+    <div class="wrap">
         <div class="shot-row">
             <div class="shot-media">
                 <div class="phone">
@@ -372,7 +414,6 @@
                 </p>
             </div>
         </div>
-
     </div>
 </section>
 
