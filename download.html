@@ -1,0 +1,142 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Download HopWire</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px 20px;
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        .logo {
+            max-width: 180px;
+            margin-bottom: 20px;
+        }
+
+        .store-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 14px 24px;
+            background-color: #591da8;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 17px;
+        }
+
+        .store-link:hover {
+            opacity: 0.9;
+        }
+    </style>
+
+    <script>
+        // ============================================================
+        // REPLACE THESE WITH YOUR ACTUAL APP STORE LINKS
+        // ============================================================
+
+        const APPLE_STORE_LINK = "https://apps.apple.com/us/app/hopwire/id6778569413";
+
+        const GOOGLE_PLAY_LINK = "https://play.google.com/store/apps/details?id=com.jeffbucher.hopwire";
+
+
+        // ============================================================
+        // DETECT DEVICE AND SEND USER TO THE CORRECT STORE
+        // ============================================================
+
+        window.onload = function () {
+
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+            // Android
+            if (/android/i.test(userAgent)) {
+                window.location.href = GOOGLE_PLAY_LINK;
+                return;
+            }
+
+            // iPhone / iPad / iPod
+            if (/iPad|iPhone|iPod/.test(userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+
+                window.location.href = APPLE_STORE_LINK;
+                return;
+            }
+
+            // Desktop or unknown device
+            document.getElementById("message").innerHTML =
+                "Download HopWire from the App Store or Google Play.";
+
+            document.getElementById("storeButtons").style.display = "block";
+        };
+    </script>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!--
+        OPTIONAL:
+        If you have a HopWire logo, you can put it here.
+
+        Example:
+        <img src="images/hopwire-logo.png"
+             alt="HopWire Logo"
+             class="logo">
+        -->
+
+        <h1>Download HopWire</h1>
+
+        <p id="message">
+            Taking you to the correct app store...
+        </p>
+
+        <!--
+        These buttons are hidden on mobile because the user
+        should automatically be redirected to the correct store.
+        They are shown on desktop/unknown devices.
+        -->
+
+        <div id="storeButtons" style="display: none;">
+
+            <a href="PASTE_YOUR_APPLE_APP_STORE_LINK_HERE"
+               class="store-link">
+                Download for iPhone
+            </a>
+
+            <br>
+
+            <a href="PASTE_YOUR_GOOGLE_PLAY_STORE_LINK_HERE"
+               class="store-link">
+                Download for Android
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
+```
