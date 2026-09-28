@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — HopWire for Brewery Owners</title>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <nav class="site-nav">
+        <div class="wrap nav-row">
+            <a class="brand" href="index.html">
+                <span class="name"><span class="mark"></span> HopWire</span>
+                <span class="tagline nav-text">for Brewery Owners</span>
+            </a>
+            <div class="nav-links">
+                <a class="text-link nav-text" href="login.html">Already have an account? Log in</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="auth-shell">
+        <div class="card auth-card" style="max-width: 460px;">
+            <h1>Create your brewery account</h1>
+            <p class="sub">Free while HopWire is in beta. No credit card required.</p>
+
+            <div class="alert" id="alert"></div>
+
+            <form id="signup-form">
+                <div class="field">
+                    <label for="breweryName">Brewery name</label>
+                    <input type="text" id="breweryName" name="breweryName" required>
+                </div>
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" autocomplete="email" required>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required>
+                    </div>
+                    <div class="field">
+                        <label for="confirmPassword">Confirm password</label>
+                        <input type="password" id="confirmPassword" autocomplete="new-password" minlength="8" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="streetAddress">Street address <span class="hint">(optional)</span></label>
+                    <input type="text" id="streetAddress" name="streetAddress">
+                </div>
+                <div class="field">
+                    <label for="phoneNumber">Phone number <span class="hint">(optional)</span></label>
+                    <input type="tel" id="phoneNumber" name="phoneNumber">
+                </div>
+                <button type="submit" class="btn-pill primary" id="submit-btn">Sign Up Free</button>
+            </form>
+
+            <p class="auth-foot">Already have an account? <a href="login.html">Log in</a></p>
+        </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+        const form = document.getElementById("signup-form");
+        const alertEl = document.getElementById("alert");
+        const submitBtn = document.getElementById("submit-btn");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            HW.hideAlert(alertEl);
+
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+            if (password !== confirmPassword) {
+                HW.showAlert(alertEl, "Passwords don't match.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Creating account…";
+
+            try {
+                const res = await fetch(`${HW.API_BASE}/api/auth/signup/brewery`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        breweryName: document.getElementById("breweryName").value.trim(),
+                        email: document.getElementById("email").value.trim(),
+                        password,
+                        streetAddress: document.getElementById("streetAddress").value.trim() || null,
+                        phoneNumber: document.getElementById("phoneNumber").value.trim() || null
+                    })
+                });
+
+                const body = await res.json().catch(() => null);
+
+                if (!res.ok) {
+                    throw new Error((body && body.message) || "Couldn't create your account.");
+                }
+
+                HW.setSession({
+                    token: body.token,
+                    breweryId: body.id,
+                    breweryName: body.fullName,
+                    email: body.email,
+                    role: body.role
+                });
+
+                window.location.href = "dashboard.html";
+            } catch (err) {
+                HW.showAlert(alertEl, err.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Sign Up Free";
+            }
+        });
+    </script>
+</body>
+</html>

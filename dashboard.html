@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — HopWire for Brewery Owners</title>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <nav class="site-nav">
+        <div class="wrap nav-row">
+            <a class="brand" href="index.html">
+                <span class="name"><span class="mark"></span> HopWire</span>
+                <span class="tagline nav-text">for Brewery Owners</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="dash-shell">
+        <aside class="dash-sidebar">
+            <div class="brewery-name" id="sidebar-brewery-name">&nbsp;</div>
+            <button class="dash-nav-item active" data-view="overview">Dashboard</button>
+            <button class="dash-nav-item" data-view="events">Events</button>
+            <button class="dash-nav-item" data-view="specials">Specials</button>
+            <button class="dash-nav-item" data-view="releases">Beer Releases</button>
+            <button class="dash-nav-item" data-view="profile">Profile</button>
+            <button class="dash-nav-item logout" id="logout-btn">Log out</button>
+        </aside>
+
+        <main class="dash-main">
+
+            <!-- OVERVIEW -->
+            <section class="dash-view active" id="view-overview">
+                <div class="dash-head">
+                    <div>
+                        <h1 id="overview-heading">Overview</h1>
+                        <p>What's happening at your brewery right now.</p>
+                    </div>
+                </div>
+                <div class="stat-grid">
+                    <div class="card stat-card"><div class="num" id="stat-checkins">—</div><div class="label">Check-ins this week</div></div>
+                    <div class="card stat-card"><div class="num" id="stat-followers">—</div><div class="label">Followers</div></div>
+                    <div class="card stat-card"><div class="num" id="stat-upcoming">—</div><div class="label">Events in the next 7 days</div></div>
+                </div>
+                <h2 style="font-size:1.05rem; margin-bottom:12px;">Next up</h2>
+                <div class="item-list" id="overview-upcoming"></div>
+            </section>
+
+            <!-- EVENTS -->
+            <section class="dash-view" id="view-events">
+                <div class="dash-head">
+                    <div><h1>Events</h1><p>Trivia nights, live music, tap takeovers — anything on the calendar.</p></div>
+                </div>
+                <div class="alert" id="events-alert"></div>
+                <div class="card" style="margin-bottom:28px;">
+                    <h2 id="events-form-title" style="font-size:1rem; margin-bottom:16px;">New event</h2>
+                    <form id="event-form">
+                        <input type="hidden" id="event-id">
+                        <div class="field">
+                            <label for="event-title">Title</label>
+                            <input type="text" id="event-title" required>
+                        </div>
+                        <div class="field">
+                            <label for="event-desc">Description <span class="hint">(optional)</span></label>
+                            <textarea id="event-desc"></textarea>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="event-start">Starts</label>
+                                <input type="datetime-local" id="event-start" required>
+                            </div>
+                            <div class="field">
+                                <label for="event-end">Ends</label>
+                                <input type="datetime-local" id="event-end" required>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="event-image">Photo <span class="hint">(optional)</span></label>
+                            <input type="file" id="event-image" accept="image/*">
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button type="submit" class="btn-pill primary" id="event-submit-btn">Post Event</button>
+                            <button type="button" class="btn-pill outline" id="event-cancel-btn" style="display:none;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="item-list" id="events-list"></div>
+            </section>
+
+            <!-- SPECIALS -->
+            <section class="dash-view" id="view-specials">
+                <div class="dash-head">
+                    <div><h1>Specials</h1><p>Daily and recurring specials shown to your followers.</p></div>
+                </div>
+                <div class="alert" id="specials-alert"></div>
+                <div class="card" style="margin-bottom:28px;">
+                    <h2 style="font-size:1rem; margin-bottom:16px;">New special</h2>
+                    <form id="special-form">
+                        <div class="field">
+                            <label for="special-message">Message</label>
+                            <input type="text" id="special-message" placeholder="$2 off pints, 4–6pm" required>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="special-date">Date</label>
+                                <input type="date" id="special-date" required>
+                            </div>
+                            <div class="field">
+                                <label for="special-repeat">Repeats</label>
+                                <select id="special-repeat">
+                                    <option value="none">Doesn't repeat</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="biweekly">Every 2 weeks</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="special-image">Photo <span class="hint">(optional)</span></label>
+                            <input type="file" id="special-image" accept="image/*">
+                        </div>
+                        <button type="submit" class="btn-pill primary" id="special-submit-btn">Post Special</button>
+                    </form>
+                </div>
+                <div class="item-list" id="specials-list"></div>
+            </section>
+
+            <!-- BEER RELEASES -->
+            <section class="dash-view" id="view-releases">
+                <div class="dash-head">
+                    <div><h1>Beer Releases</h1><p>New beers, seasonal drops, and one-offs.</p></div>
+                </div>
+                <div class="alert" id="releases-alert"></div>
+                <div class="card" style="margin-bottom:28px;">
+                    <h2 id="releases-form-title" style="font-size:1rem; margin-bottom:16px;">New release</h2>
+                    <form id="release-form">
+                        <input type="hidden" id="release-id">
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="release-name">Beer name</label>
+                                <input type="text" id="release-name" required>
+                            </div>
+                            <div class="field">
+                                <label for="release-style">Style <span class="hint">(optional)</span></label>
+                                <input type="text" id="release-style" placeholder="New England IPA">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="release-desc">Description <span class="hint">(optional)</span></label>
+                            <textarea id="release-desc"></textarea>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="release-abv">ABV % <span class="hint">(optional)</span></label>
+                                <input type="number" id="release-abv" step="0.1" min="0" max="100">
+                            </div>
+                            <div class="field">
+                                <label for="release-date">Release date</label>
+                                <input type="date" id="release-date" required>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="release-image">Photo <span class="hint">(optional)</span></label>
+                            <input type="file" id="release-image" accept="image/*">
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button type="submit" class="btn-pill primary" id="release-submit-btn">Post Release</button>
+                            <button type="button" class="btn-pill outline" id="release-cancel-btn" style="display:none;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="item-list" id="releases-list"></div>
+            </section>
+
+            <!-- PROFILE -->
+            <section class="dash-view" id="view-profile">
+                <div class="dash-head">
+                    <div><h1>Profile</h1><p>What customers see about your brewery in the app.</p></div>
+                </div>
+                <div class="alert" id="profile-alert"></div>
+
+                <div class="card" style="margin-bottom:24px;">
+                    <h2 style="font-size:1rem; margin-bottom:16px;">Brewery info</h2>
+                    <form id="brewery-info-form">
+                        <div class="field">
+                            <label for="brewery-name">Brewery name</label>
+                            <input type="text" id="brewery-name">
+                        </div>
+                        <div class="field">
+                            <label for="brewery-address">Street address</label>
+                            <input type="text" id="brewery-address">
+                        </div>
+                        <div class="field">
+                            <label for="brewery-phone">Phone number</label>
+                            <input type="tel" id="brewery-phone">
+                        </div>
+                        <button type="submit" class="btn-pill primary small">Save</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size:1rem; margin-bottom:16px;">Contact &amp; links</h2>
+                    <form id="brewery-contact-form">
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="owner-name">Owner name</label>
+                                <input type="text" id="owner-name">
+                            </div>
+                            <div class="field">
+                                <label for="owner-email">Owner email</label>
+                                <input type="email" id="owner-email">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="website-url">Website</label>
+                            <input type="url" id="website-url" placeholder="https://">
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="facebook-url">Facebook</label>
+                                <input type="url" id="facebook-url" placeholder="https://">
+                            </div>
+                            <div class="field">
+                                <label for="instagram-url">Instagram</label>
+                                <input type="url" id="instagram-url" placeholder="https://">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="food-type">Food</label>
+                            <input type="text" id="food-type" placeholder="Wood-fired pizza, food truck Thu–Sat…">
+                        </div>
+                        <button type="submit" class="btn-pill primary small">Save</button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+        const session = HW.requireSession();
+    </script>
+    <script src="assets/dashboard.js"></script>
+</body>
+</html>
