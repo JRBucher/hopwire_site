@@ -64,11 +64,25 @@ if (session) {
     }
 
     // ── OVERVIEW ─────────────────────────────────────────────────────────────
+    function timeOfDayGreeting() {
+        const hour = new Date().getHours();
+        if (hour < 5) return "Burning the midnight oil";
+        if (hour < 12) return "Good morning";
+        if (hour < 17) return "Good afternoon";
+        return "Good evening";
+    }
+
     async function loadOverview() {
         try {
             const summary = await HW.apiJson(`/api/breweries/${breweryId}/dashboard-summary`);
-            document.getElementById("overview-heading").textContent = summary.breweryName || "Overview";
-            document.getElementById("sidebar-brewery-name").textContent = summary.breweryName || session.breweryName;
+            const breweryName = summary.breweryName || session.breweryName || "";
+            document.getElementById("overview-heading").textContent = breweryName
+                ? `${timeOfDayGreeting()}, ${breweryName}`
+                : timeOfDayGreeting();
+            document.getElementById("overview-subhead").textContent =
+                new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) +
+                " — here's what's pouring.";
+            document.getElementById("sidebar-brewery-name").textContent = breweryName;
             document.getElementById("stat-checkins").textContent = summary.weeklyCheckinCount ?? "0";
             document.getElementById("stat-followers").textContent = summary.followerCount ?? "0";
             document.getElementById("stat-upcoming").textContent = summary.upcomingEventCount ?? "0";
@@ -111,99 +125,115 @@ if (session) {
 
     eventCancelBtn.addEventListener("click", resetEventForm);
 
+    function renderEventRow(ev, isPast) {
+        const actions = isPast
+            ? `<button class="btn-pill outline small" data-action="photos">View Photos</button>
+               <button class="btn-pill danger" data-action="delete">Delete</button>`
+            : `<button class="btn-pill outline small" data-action="edit">Edit</button>
+               <button class="btn-pill danger" data-action="delete">Delete</button>`;
+        return `
+            <div class="item-row ${isPast ? "is-past" : ""}" data-id="${ev.id}" style="align-items:flex-start;">
+                <div class="item-info">
+                    <div class="item-title">${escapeHtml(ev.title)}</div>
+                    <div class="item-meta">${formatDateTimeRange(ev.startAt, ev.endAt)}</div>
+                    ${isPast ? `<div class="photo-panel" style="display:none;"></div>` : ""}
+                </div>
+                <div class="item-actions">${actions}</div>
+            </div>
+        `;
+    }
+
+    function wireEventRow(row, events) {
+        const id = row.dataset.id;
+        const ev = events.find(e => String(e.id) === id);
+
+        const editBtn = row.querySelector('[data-action="edit"]');
+        if (editBtn) {
+            editBtn.addEventListener("click", () => {
+                document.getElementById("event-id").value = ev.id;
+                document.getElementById("event-title").value = ev.title || "";
+                document.getElementById("event-desc").value = ev.description || "";
+                document.getElementById("event-start").value = toLocalDateTimeInputValue(ev.startAt);
+                document.getElementById("event-end").value = toLocalDateTimeInputValue(ev.endAt);
+                document.getElementById("events-form-title").textContent = "Edit event";
+                document.getElementById("event-submit-btn").textContent = "Save changes";
+                eventCancelBtn.style.display = "inline-flex";
+                eventForm.scrollIntoView({ behavior: "smooth" });
+            });
+        }
+
+        const photosBtn = row.querySelector('[data-action="photos"]');
+        if (photosBtn) {
+            const panel = row.querySelector(".photo-panel");
+            let loaded = false;
+            photosBtn.addEventListener("click", async () => {
+                const showing = panel.style.display !== "none";
+                if (showing) {
+                    panel.style.display = "none";
+                    photosBtn.textContent = "View Photos";
+                    return;
+                }
+                panel.style.display = "block";
+                photosBtn.textContent = "Hide Photos";
+                if (loaded) return;
+                loaded = true;
+                panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">Loading…</div>`;
+                try {
+                    const photos = await HW.apiJson(`/api/events/${ev.id}/shared-photos`);
+                    if (!photos.length) {
+                        panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">No photos shared for this event.</div>`;
+                        return;
+                    }
+                    panel.innerHTML = `<div class="photo-grid">${photos.map((p, i) => `
+                        <a class="photo-item" href="data:image/jpeg;base64,${p.photoBytes}" download="hopwire-event-${ev.id}-photo-${i + 1}.jpg" title="Save photo">
+                            <img src="data:image/jpeg;base64,${p.photoBytes}" alt="Shared photo" loading="lazy">
+                            <span class="photo-save-label">Save</span>
+                        </a>
+                    `).join("")}</div>`;
+                } catch (err) {
+                    panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">Couldn't load photos.</div>`;
+                }
+            });
+        }
+
+        row.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+            if (!confirm(`Delete "${ev.title}"?`)) return;
+            try {
+                await HW.apiJson(`/api/events/${ev.id}?breweryId=${breweryId}`, { method: "DELETE" });
+                loadEvents();
+            } catch (err) {
+                HW.showAlert(eventAlert, err.message);
+            }
+        });
+    }
+
     async function loadEvents() {
         try {
             const events = await HW.apiJson(`/api/breweries/${breweryId}/events?userId=0&window=all`);
-            const el = document.getElementById("events-list");
-            if (!events.length) {
-                el.innerHTML = `<div class="empty-state">No events yet.</div>`;
-                return;
-            }
-
             const now = new Date();
 
-            el.innerHTML = events.map(ev => {
-                const isPast = new Date(ev.endAt || ev.startAt) < now;
-                const actions = isPast
-                    ? `<button class="btn-pill outline small" data-action="photos">View Photos</button>
-                       <button class="btn-pill danger" data-action="delete">Delete</button>`
-                    : `<button class="btn-pill outline small" data-action="edit">Edit</button>
-                       <button class="btn-pill danger" data-action="delete">Delete</button>`;
-                return `
-                    <div class="item-row" data-id="${ev.id}" style="align-items:flex-start;">
-                        <div class="item-info">
-                            <div class="item-title">${escapeHtml(ev.title)}</div>
-                            <div class="item-meta">${formatDateTimeRange(ev.startAt, ev.endAt)}${isPast ? " · Past" : ""}</div>
-                            ${isPast ? `<div class="photo-panel" style="display:none;"></div>` : ""}
-                        </div>
-                        <div class="item-actions">${actions}</div>
-                    </div>
-                `;
-            }).join("");
+            const upcoming = events
+                .filter(ev => new Date(ev.endAt || ev.startAt) >= now)
+                .sort((a, b) => new Date(a.startAt) - new Date(b.startAt)); // soonest first
 
-            el.querySelectorAll(".item-row").forEach(row => {
-                const id = row.dataset.id;
-                const ev = events.find(e => String(e.id) === id);
+            const past = events
+                .filter(ev => new Date(ev.endAt || ev.startAt) < now)
+                .sort((a, b) => new Date(b.startAt) - new Date(a.startAt)); // most recent first
 
-                const editBtn = row.querySelector('[data-action="edit"]');
-                if (editBtn) {
-                    editBtn.addEventListener("click", () => {
-                        document.getElementById("event-id").value = ev.id;
-                        document.getElementById("event-title").value = ev.title || "";
-                        document.getElementById("event-desc").value = ev.description || "";
-                        document.getElementById("event-start").value = toLocalDateTimeInputValue(ev.startAt);
-                        document.getElementById("event-end").value = toLocalDateTimeInputValue(ev.endAt);
-                        document.getElementById("events-form-title").textContent = "Edit event";
-                        document.getElementById("event-submit-btn").textContent = "Save changes";
-                        eventCancelBtn.style.display = "inline-flex";
-                        eventForm.scrollIntoView({ behavior: "smooth" });
-                    });
-                }
+            document.getElementById("events-upcoming-count").textContent = upcoming.length;
+            document.getElementById("events-past-count").textContent = past.length;
 
-                const photosBtn = row.querySelector('[data-action="photos"]');
-                if (photosBtn) {
-                    const panel = row.querySelector(".photo-panel");
-                    let loaded = false;
-                    photosBtn.addEventListener("click", async () => {
-                        const showing = panel.style.display !== "none";
-                        if (showing) {
-                            panel.style.display = "none";
-                            photosBtn.textContent = "View Photos";
-                            return;
-                        }
-                        panel.style.display = "block";
-                        photosBtn.textContent = "Hide Photos";
-                        if (loaded) return;
-                        loaded = true;
-                        panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">Loading…</div>`;
-                        try {
-                            const photos = await HW.apiJson(`/api/events/${ev.id}/shared-photos`);
-                            if (!photos.length) {
-                                panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">No photos shared for this event.</div>`;
-                                return;
-                            }
-                            panel.innerHTML = `<div class="photo-grid">${photos.map((p, i) => `
-                                <a class="photo-item" href="data:image/jpeg;base64,${p.photoBytes}" download="hopwire-event-${ev.id}-photo-${i + 1}.jpg" title="Save photo">
-                                    <img src="data:image/jpeg;base64,${p.photoBytes}" alt="Shared photo" loading="lazy">
-                                    <span class="photo-save-label">Save</span>
-                                </a>
-                            `).join("")}</div>`;
-                        } catch (err) {
-                            panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">Couldn't load photos.</div>`;
-                        }
-                    });
-                }
+            const upcomingEl = document.getElementById("events-upcoming-list");
+            upcomingEl.innerHTML = upcoming.length
+                ? upcoming.map(ev => renderEventRow(ev, false)).join("")
+                : `<div class="empty-state">Nothing on the calendar yet — post your first event above.</div>`;
+            upcomingEl.querySelectorAll(".item-row").forEach(row => wireEventRow(row, events));
 
-                row.querySelector('[data-action="delete"]').addEventListener("click", async () => {
-                    if (!confirm(`Delete "${ev.title}"?`)) return;
-                    try {
-                        await HW.apiJson(`/api/events/${ev.id}?breweryId=${breweryId}`, { method: "DELETE" });
-                        loadEvents();
-                    } catch (err) {
-                        HW.showAlert(eventAlert, err.message);
-                    }
-                });
-            });
+            const pastEl = document.getElementById("events-past-list");
+            pastEl.innerHTML = past.length
+                ? past.map(ev => renderEventRow(ev, true)).join("")
+                : `<div class="empty-state">No past events yet.</div>`;
+            pastEl.querySelectorAll(".item-row").forEach(row => wireEventRow(row, events));
         } catch (err) {
             HW.showAlert(eventAlert, err.message);
         }
@@ -253,7 +283,7 @@ if (session) {
             const el = document.getElementById("specials-list");
             const upcoming = specials.filter(s => new Date(s.date) >= new Date(new Date().toDateString()));
             if (!upcoming.length) {
-                el.innerHTML = `<div class="empty-state">No upcoming specials.</div>`;
+                el.innerHTML = `<div class="empty-state">No specials on deck — line one up above.</div>`;
                 return;
             }
             el.innerHTML = upcoming.slice(0, 30).map(s => `
@@ -328,7 +358,7 @@ if (session) {
             const releases = await HW.apiJson(`/api/breweries/${breweryId}/beer-releases`);
             const el = document.getElementById("releases-list");
             if (!releases.length) {
-                el.innerHTML = `<div class="empty-state">No beer releases yet.</div>`;
+                el.innerHTML = `<div class="empty-state">Nothing brewing yet — post your first release above.</div>`;
                 return;
             }
             el.innerHTML = releases.map(r => `
