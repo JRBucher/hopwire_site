@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=3">
+    <link rel="stylesheet" href="assets/styles.css?v=4">
 </head>
 <body>
     <nav class="site-nav">
@@ -16,101 +16,146 @@
         </div>
     </nav>
 
-    <div class="auth-shell">
-        <div class="card auth-card" style="max-width: 460px;">
-            <h1>Create your brewery account</h1>
-            <p class="sub">Sign up today and get 3 months free. After your free period, your selected plan's monthly rate will apply.</p>
+    <div class="wizard-shell">
+        <div class="card wizard-card">
+            <div class="wizard-progress" id="wizard-progress">
+                <div class="step active" data-step="1"><span class="step-num">1</span><span class="step-label">Account</span></div>
+                <div class="step" data-step="2"><span class="step-num">2</span><span class="step-label">Brewery</span></div>
+                <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">Plan</span></div>
+                <div class="step" data-step="4"><span class="step-num">4</span><span class="step-label">Review</span></div>
+            </div>
 
             <div class="alert" id="alert"></div>
 
-            <form id="signup-form">
+            <!-- STEP 1: ACCOUNT -->
+            <section class="wizard-step active" id="wizard-step-1">
+                <h1>Create your account</h1>
+                <p class="sub">Step 1 of 4 — let's start with you.</p>
                 <div class="field">
-                    <label for="breweryName">Brewery name</label>
-                    <input type="text" id="breweryName" name="breweryName" required>
+                    <label for="ownerName">Your full name</label>
+                    <input type="text" id="ownerName" autocomplete="name" required>
                 </div>
                 <div class="field">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" autocomplete="email" required>
+                    <input type="email" id="email" autocomplete="email" required>
                 </div>
                 <div class="field-row">
                     <div class="field">
                         <label for="password">Password</label>
-                        <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required>
+                        <input type="password" id="password" autocomplete="new-password" minlength="8" required>
                     </div>
                     <div class="field">
                         <label for="confirmPassword">Confirm password</label>
                         <input type="password" id="confirmPassword" autocomplete="new-password" minlength="8" required>
                     </div>
                 </div>
+                <div class="wizard-actions">
+                    <button type="button" class="btn-pill primary" data-next>Continue</button>
+                </div>
+            </section>
+
+            <!-- STEP 2: BREWERY DETAILS -->
+            <section class="wizard-step" id="wizard-step-2">
+                <h1>Your brewery</h1>
+                <p class="sub">Step 2 of 4 — search for your brewery, or add it if it's not listed yet.</p>
+
+                <div class="field brewery-search-wrap">
+                    <label for="breweryQuery">Brewery name</label>
+                    <input type="text" id="breweryQuery" placeholder="Start typing your brewery's name…" autocomplete="off">
+                    <div class="brewery-suggestions" id="brewery-suggestions" style="display:none;"></div>
+                </div>
+                <p style="margin: -8px 0 16px;"><a href="#" id="manual-entry-toggle" style="font-size:0.85rem;">Can't find your brewery? Add it manually</a></p>
+                <div class="field" id="manual-brewery-field" style="display:none;">
+                    <label for="manualBreweryName">Brewery name</label>
+                    <input type="text" id="manualBreweryName">
+                </div>
+
                 <div class="field">
-                    <label for="streetAddress">Street address <span class="hint">(optional)</span></label>
-                    <input type="text" id="streetAddress" name="streetAddress">
+                    <label for="breweryAddress">Street address</label>
+                    <input type="text" id="breweryAddress" required>
                 </div>
                 <div class="field">
-                    <label for="phoneNumber">Phone number <span class="hint">(optional)</span></label>
-                    <input type="tel" id="phoneNumber" name="phoneNumber">
+                    <label for="breweryPhone">Phone number <span class="hint">(optional)</span></label>
+                    <input type="tel" id="breweryPhone">
                 </div>
-                <button type="submit" class="btn-pill primary" id="submit-btn">Sign Up Free</button>
-            </form>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="websiteUrl">Website <span class="hint">(optional)</span></label>
+                        <input type="url" id="websiteUrl" placeholder="https://">
+                    </div>
+                    <div class="field">
+                        <label for="facebookUrl">Facebook <span class="hint">(optional)</span></label>
+                        <input type="url" id="facebookUrl" placeholder="https://">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="instagramUrl">Instagram <span class="hint">(optional)</span></label>
+                        <input type="url" id="instagramUrl" placeholder="https://">
+                    </div>
+                    <div class="field">
+                        <label for="beerMenuUrl">Beer menu URL <span class="hint">(optional)</span></label>
+                        <input type="url" id="beerMenuUrl" placeholder="https://">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Food</label>
+                    <div class="radio-row">
+                        <label><input type="radio" name="foodType" value="none" checked> No kitchen</label>
+                        <label><input type="radio" name="foodType" value="kitchen"> We have a kitchen / food menu</label>
+                    </div>
+                </div>
+                <div class="field" id="food-menu-field" style="display:none;">
+                    <label for="foodMenuUrl">Food menu URL</label>
+                    <input type="url" id="foodMenuUrl" placeholder="https://">
+                </div>
+
+                <div class="field">
+                    <label>Hours</label>
+                    <div id="hours-rows"></div>
+                </div>
+
+                <div class="wizard-actions">
+                    <button type="button" class="btn-pill outline" data-back>Back</button>
+                    <button type="button" class="btn-pill primary" data-next>Continue</button>
+                </div>
+            </section>
+
+            <!-- STEP 3: PLAN -->
+            <section class="wizard-step" id="wizard-step-3">
+                <h1>Choose your plan</h1>
+                <p class="sub" id="founding-banner" style="display:none;">Founding Brewery Partner pricing — locked in, free until March 1, 2027.</p>
+                <p class="sub" id="plan-sub">Step 3 of 4 — based on how many locations you have.</p>
+                <div class="tier-list" id="tier-list"></div>
+                <div class="wizard-actions">
+                    <button type="button" class="btn-pill outline" data-back>Back</button>
+                    <button type="button" class="btn-pill primary" data-next>Continue</button>
+                </div>
+            </section>
+
+            <!-- STEP 4: REVIEW & SUBSCRIBE -->
+            <section class="wizard-step" id="wizard-step-4">
+                <h1>Review &amp; subscribe</h1>
+                <p class="sub">Step 4 of 4 — you'll finish this on Stripe's secure checkout page.</p>
+                <div class="summary-card">
+                    <div class="summary-row"><span>Brewery</span><strong id="summary-brewery"></strong></div>
+                    <div class="summary-row"><span>Plan</span><strong id="summary-plan"></strong></div>
+                    <div class="summary-row"><span>Price</span><strong id="summary-price"></strong></div>
+                </div>
+                <p class="fine-print" id="summary-due-note">You won't be charged until checkout is complete.</p>
+                <div class="wizard-actions">
+                    <button type="button" class="btn-pill outline" data-back>Back</button>
+                    <button type="button" class="btn-pill primary" id="checkout-btn">Complete Subscription</button>
+                </div>
+            </section>
 
             <p class="auth-foot">Already have an account? <a href="login.html">Log in</a></p>
         </div>
     </div>
 
-    <script src="assets/app.js?v=3"></script>
-    <script>
-        const form = document.getElementById("signup-form");
-        const alertEl = document.getElementById("alert");
-        const submitBtn = document.getElementById("submit-btn");
-
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            HW.hideAlert(alertEl);
-
-            const password = document.getElementById("password").value;
-            const confirmPassword = document.getElementById("confirmPassword").value;
-            if (password !== confirmPassword) {
-                HW.showAlert(alertEl, "Passwords don't match.");
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = "Creating account…";
-
-            try {
-                const res = await fetch(`${HW.API_BASE}/api/auth/signup/brewery`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        breweryName: document.getElementById("breweryName").value.trim(),
-                        email: document.getElementById("email").value.trim(),
-                        password,
-                        streetAddress: document.getElementById("streetAddress").value.trim() || null,
-                        phoneNumber: document.getElementById("phoneNumber").value.trim() || null
-                    })
-                });
-
-                const body = await res.json().catch(() => null);
-
-                if (!res.ok) {
-                    throw new Error((body && body.message) || "Couldn't create your account.");
-                }
-
-                HW.setSession({
-                    token: body.token,
-                    breweryId: body.id,
-                    breweryName: body.fullName,
-                    email: body.email,
-                    role: body.role
-                });
-
-                window.location.href = "dashboard.html";
-            } catch (err) {
-                HW.showAlert(alertEl, err.message);
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Sign Up Free";
-            }
-        });
-    </script>
+    <script src="assets/app.js?v=4"></script>
+    <script src="assets/signup.js?v=1"></script>
 </body>
 </html>

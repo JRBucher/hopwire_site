@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finishing Up — HopWire for Brewery Owners</title>
+    <link rel="stylesheet" href="assets/styles.css?v=4">
+</head>
+<body>
+    <nav class="site-nav">
+        <div class="wrap nav-row">
+            <a class="brand" href="index.html">
+                <span class="name"><span class="mark"></span> HopWire</span>
+                <span class="tagline nav-text">for Brewery Owners</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="auth-shell">
+        <div class="card auth-card" id="status-card" style="text-align:center;">
+            <div id="status-spinner">
+                <h1>Finishing up…</h1>
+                <p class="sub">Confirming your payment and setting up your brewery.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/app.js?v=4"></script>
+    <script>
+        const STORAGE_KEY = "hw_signup_wizard";
+        const cardEl = document.getElementById("status-card");
+
+        function showResult(title, message, { showRetry = false, showDashboard = false, showSupport = false } = {}) {
+            let actions = "";
+            if (showDashboard) actions += `<a class="btn-pill primary" href="dashboard.html" style="margin-top:16px;">Go to Dashboard</a>`;
+            if (showRetry) actions += `<a class="btn-pill outline" href="signup.html" style="margin-top:16px;">Back to Sign Up</a>`;
+            if (showSupport) actions += `<a class="btn-pill outline" href="mailto:info@hopwire.app" style="margin-top:16px;">Contact Support</a>`;
+            cardEl.innerHTML = `<h1>${title}</h1><p class="sub">${message}</p><div style="display:flex; flex-direction:column; gap:10px;">${actions}</div>`;
+        }
+
+        // Matches BreweryCheckoutPage.IsFoundingWindow() / signup.js's isFoundingWindow().
+        function isFoundingWindow() {
+            const now = new Date();
+            const start = new Date(2026, 7, 17);
+            const end = new Date(2026, 7, 31, 23, 59, 59);
+            return now >= start && now <= end;
+        }
+
+        function toHms(hhmm) {
+            return hhmm && hhmm.length === 5 ? `${hhmm}:00` : "00:00:00";
+        }
+
+        async function finishSignup() {
+            const sessionId = new URLSearchParams(location.search).get("session_id");
+            if (!sessionId) {
+                showResult("Something's missing", "We couldn't find your checkout session. If you completed payment, contact support — otherwise, please start over.", { showRetry: true, showSupport: true });
+                return;
+            }
+
+            let state;
+            try {
+                const raw = sessionStorage.getItem(STORAGE_KEY);
+                state = raw ? JSON.parse(raw) : null;
+            } catch {
+                state = null;
+            }
+
+            if (!state || !state.email || !state.breweryName) {
+                showResult("We lost track of your signup details", "This can happen if you completed checkout in a different browser tab, or cleared your browser data. If you were charged, contact support — otherwise, please start over.", { showRetry: true, showSupport: true });
+                return;
+            }
+
+            // ── Verify the session actually completed ──
+            let verification;
+            try {
+                const res = await fetch(`${HW.API_BASE}/api/stripe/verify-session/${encodeURIComponent(sessionId)}`);
+                verification = await res.json();
+            } catch {
+                showResult("Couldn't verify payment", "Something went wrong confirming your payment. Please try again.", { showRetry: true, showSupport: true });
+                return;
+            }
+
+            if (!verification || !verification.paid) {
+                showResult("Payment incomplete", "Your payment could not be confirmed. You have not been charged — please try again.", { showRetry: true });
+                return;
+            }
+
+            // ── Create the account (deferred until now, same as the app) ──
+            const role = isFoundingWindow() ? "business_owner_founding" : "business_owner_paid";
+            let signupResult;
+            try {
+                const res = await fetch(`${HW.API_BASE}/api/auth/signup/brewery`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        breweryName: state.breweryName,
+                        email: state.email,
+                        password: state.password,
+                        phoneNumber: state.phone || null,
+                        streetAddress: state.address || null,
+                        existingBreweryId: state.isNewBrewery ? null : (state.existingBreweryId || null),
+                        maxLocations: state.maxLocations || 1,
+                        role
+                    })
+                });
+                const body = await res.json().catch(() => null);
+                if (!res.ok) throw new Error((body && body.message) || "Couldn't create your account.");
+                signupResult = body;
+            } catch (err) {
+                showResult(
+                    "Your payment went through, but we hit a snag",
+                    `We couldn't create your account: ${err.message}. Please contact support and we'll get you set up — your payment is safe.`,
+                    { showSupport: true }
+                );
+                return;
+            }
+
+            // From here on, every call is authenticated as the brewery we just created.
+            HW.setSession({
+                token: signupResult.token,
+                breweryId: signupResult.id,
+                breweryName: signupResult.fullName,
+                email: signupResult.email,
+                role: signupResult.role
+            });
+
+            // ── Attach Stripe ids (best-effort — never blocks getting into the dashboard) ──
+            try {
+                await HW.apiJson(`/api/breweries/${signupResult.id}/stripe-info`, {
+                    method: "PUT",
+                    body: JSON.stringify({ customerId: verification.customerId, subscriptionId: verification.subscriptionId })
+                });
+            } catch (err) {
+                console.error("stripe-info save failed", err);
+            }
+
+            // ── Save brewery profile: socials, food, hours (best-effort) ──
+            try {
+                const h = state.hours || {};
+                const day = (key) => h[key] || { open: false, openTime: "00:00", closeTime: "00:00" };
+                await HW.apiJson(`/api/breweryprofile/${signupResult.id}`, {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        breweryId: signupResult.id,
+                        ownerFullName: state.ownerName || null,
+                        ownerEmail: state.email || null,
+                        websiteUrl: state.websiteUrl || null,
+                        facebookUrl: state.facebookUrl || null,
+                        instagramUrl: state.instagramUrl || null,
+                        beermenuUrl: state.beerMenuUrl || null,
+                        foodMenuUrl: state.foodMenuUrl || null,
+                        foodType: state.foodType || "none",
+                        mondayOpen: toHms(day("monday").openTime), mondayClose: toHms(day("monday").closeTime),
+                        tuesdayOpen: toHms(day("tuesday").openTime), tuesdayClose: toHms(day("tuesday").closeTime),
+                        wednesdayOpen: toHms(day("wednesday").openTime), wednesdayClose: toHms(day("wednesday").closeTime),
+                        thursdayOpen: toHms(day("thursday").openTime), thursdayClose: toHms(day("thursday").closeTime),
+                        fridayOpen: toHms(day("friday").openTime), fridayClose: toHms(day("friday").closeTime),
+                        saturdayOpen: toHms(day("saturday").openTime), saturdayClose: toHms(day("saturday").closeTime),
+                        sundayOpen: toHms(day("sunday").openTime), sundayClose: toHms(day("sunday").closeTime)
+                    })
+                });
+            } catch (err) {
+                console.error("brewery profile save failed", err);
+            }
+
+            // ── Notify HopWire of the new signup (best-effort, fire-and-forget) ──
+            fetch(`${HW.API_BASE}/api/notifications/new-brewery`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ BreweryId: signupResult.id, BreweryName: state.breweryName, Address: state.address })
+            }).catch(() => {});
+
+            sessionStorage.removeItem(STORAGE_KEY);
+
+            showResult("Welcome to HopWire!", "Your subscription is active and your brewery is set up.", { showDashboard: true });
+        }
+
+        finishSignup();
+    </script>
+</body>
+</html>
