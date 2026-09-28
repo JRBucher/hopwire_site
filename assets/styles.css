@@ -241,6 +241,39 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .section-toggle button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
 
+/* Analytics */
+.mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+.mini-stat .num { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
+.mini-stat .label { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+.section-card { margin-bottom: 24px; }
+.section-card h2 { font-size: 1rem; margin-bottom: 4px; }
+.section-card .section-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
+
+.weekday-chart { display: flex; align-items: flex-end; gap: 8px; height: 110px; margin-top: 12px; }
+.weekday-chart .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; }
+.weekday-chart .bar { width: 100%; max-width: 28px; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }
+.weekday-chart .bar-label { color: var(--muted); font-size: 0.72rem; }
+
+.review-item { border-bottom: 1px solid var(--line); padding: 12px 0; }
+.review-item:last-child { border-bottom: none; }
+.review-item .stars { color: var(--amber); font-weight: 700; font-size: 0.9rem; }
+.review-item .msg { font-size: 0.9rem; margin-top: 4px; }
+.review-item .when { color: var(--muted); font-size: 0.78rem; margin-top: 4px; }
+
+.tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { background: var(--accent-soft); color: var(--accent); font-size: 0.8rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; }
+
+.week-offset-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+.week-offset-toggle button {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 14px; font-size: 0.8rem; font-weight: 600; color: var(--muted); cursor: pointer; font-family: inherit;
+}
+.week-offset-toggle button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.photo-panel { margin-top: 10px; width: 100%; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-top: 10px; }
+.photo-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+
 @media (max-width: 900px) {
     .dash-shell { flex-direction: column; }
     .dash-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; }
