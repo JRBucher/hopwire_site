@@ -19,6 +19,7 @@ if (session) {
             if (name === "events") loadEvents();
             if (name === "specials") loadSpecials();
             if (name === "releases") loadReleases();
+            if (name === "analytics") loadAnalytics();
             if (name === "profile") loadProfile();
         }
     }
@@ -118,33 +119,78 @@ if (session) {
                 el.innerHTML = `<div class="empty-state">No events yet.</div>`;
                 return;
             }
-            el.innerHTML = events.map(ev => `
-                <div class="item-row" data-id="${ev.id}">
-                    <div class="item-info">
-                        <div class="item-title">${escapeHtml(ev.title)}</div>
-                        <div class="item-meta">${formatDateTimeRange(ev.startAt, ev.endAt)}</div>
+
+            const now = new Date();
+
+            el.innerHTML = events.map(ev => {
+                const isPast = new Date(ev.endAt || ev.startAt) < now;
+                const actions = isPast
+                    ? `<button class="btn-pill outline small" data-action="photos">View Photos</button>
+                       <button class="btn-pill danger" data-action="delete">Delete</button>`
+                    : `<button class="btn-pill outline small" data-action="edit">Edit</button>
+                       <button class="btn-pill danger" data-action="delete">Delete</button>`;
+                return `
+                    <div class="item-row" data-id="${ev.id}" style="align-items:flex-start;">
+                        <div class="item-info">
+                            <div class="item-title">${escapeHtml(ev.title)}</div>
+                            <div class="item-meta">${formatDateTimeRange(ev.startAt, ev.endAt)}${isPast ? " · Past" : ""}</div>
+                            ${isPast ? `<div class="photo-panel" style="display:none;"></div>` : ""}
+                        </div>
+                        <div class="item-actions">${actions}</div>
                     </div>
-                    <div class="item-actions">
-                        <button class="btn-pill outline small" data-action="edit">Edit</button>
-                        <button class="btn-pill danger" data-action="delete">Delete</button>
-                    </div>
-                </div>
-            `).join("");
+                `;
+            }).join("");
 
             el.querySelectorAll(".item-row").forEach(row => {
                 const id = row.dataset.id;
                 const ev = events.find(e => String(e.id) === id);
-                row.querySelector('[data-action="edit"]').addEventListener("click", () => {
-                    document.getElementById("event-id").value = ev.id;
-                    document.getElementById("event-title").value = ev.title || "";
-                    document.getElementById("event-desc").value = ev.description || "";
-                    document.getElementById("event-start").value = toLocalDateTimeInputValue(ev.startAt);
-                    document.getElementById("event-end").value = toLocalDateTimeInputValue(ev.endAt);
-                    document.getElementById("events-form-title").textContent = "Edit event";
-                    document.getElementById("event-submit-btn").textContent = "Save changes";
-                    eventCancelBtn.style.display = "inline-flex";
-                    eventForm.scrollIntoView({ behavior: "smooth" });
-                });
+
+                const editBtn = row.querySelector('[data-action="edit"]');
+                if (editBtn) {
+                    editBtn.addEventListener("click", () => {
+                        document.getElementById("event-id").value = ev.id;
+                        document.getElementById("event-title").value = ev.title || "";
+                        document.getElementById("event-desc").value = ev.description || "";
+                        document.getElementById("event-start").value = toLocalDateTimeInputValue(ev.startAt);
+                        document.getElementById("event-end").value = toLocalDateTimeInputValue(ev.endAt);
+                        document.getElementById("events-form-title").textContent = "Edit event";
+                        document.getElementById("event-submit-btn").textContent = "Save changes";
+                        eventCancelBtn.style.display = "inline-flex";
+                        eventForm.scrollIntoView({ behavior: "smooth" });
+                    });
+                }
+
+                const photosBtn = row.querySelector('[data-action="photos"]');
+                if (photosBtn) {
+                    const panel = row.querySelector(".photo-panel");
+                    let loaded = false;
+                    photosBtn.addEventListener("click", async () => {
+                        const showing = panel.style.display !== "none";
+                        if (showing) {
+                            panel.style.display = "none";
+                            photosBtn.textContent = "View Photos";
+                            return;
+                        }
+                        panel.style.display = "block";
+                        photosBtn.textContent = "Hide Photos";
+                        if (loaded) return;
+                        loaded = true;
+                        panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">Loading…</div>`;
+                        try {
+                            const photos = await HW.apiJson(`/api/events/${ev.id}/shared-photos`);
+                            if (!photos.length) {
+                                panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">No photos shared for this event.</div>`;
+                                return;
+                            }
+                            panel.innerHTML = `<div class="photo-grid">${photos.map(p => `
+                                <img src="data:image/jpeg;base64,${p.photoBytes}" alt="Shared photo" loading="lazy">
+                            `).join("")}</div>`;
+                        } catch (err) {
+                            panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">Couldn't load photos.</div>`;
+                        }
+                    });
+                }
+
                 row.querySelector('[data-action="delete"]').addEventListener("click", async () => {
                     if (!confirm(`Delete "${ev.title}"?`)) return;
                     try {
@@ -470,6 +516,162 @@ if (session) {
             HW.showAlert(alertEl, err.message);
         }
     });
+
+    // ── ANALYTICS ────────────────────────────────────────────────────────────
+    // Mirrors BreweryAnalyticsController's 7 endpoints — the same data the
+    // app's own brewery analytics screen shows.
+    const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    let guestStayWeekOffset = 0;
+
+    function miniStatHtml(label, value) {
+        return `<div class="mini-stat"><div class="num">${value}</div><div class="label">${escapeHtml(label)}</div></div>`;
+    }
+
+    function renderWeekdayChart(el, values) {
+        const max = Math.max(1, ...values);
+        el.innerHTML = values.map((v, i) => `
+            <div class="bar-col">
+                <div class="bar" style="height:${Math.max(2, Math.round((v / max) * 100))}%"></div>
+                <div class="bar-label">${WEEKDAY_LABELS[i]}</div>
+            </div>
+        `).join("");
+    }
+
+    function starString(n) {
+        const full = Math.max(0, Math.min(5, Math.round(n)));
+        return "★".repeat(full) + "☆".repeat(5 - full);
+    }
+
+    function tagListHtml(arr) {
+        return arr && arr.length
+            ? arr.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("")
+            : `<span style="color:var(--muted); font-size:0.85rem;">Not enough data yet</span>`;
+    }
+
+    async function renderGuestStay() {
+        try {
+            const gs = await HW.apiJson(`/api/breweries/${breweryId}/analytics/guest-stay?weekOffset=${guestStayWeekOffset}`);
+            document.getElementById("analytics-guest-stay").innerHTML = [
+                miniStatHtml("Monthly avg", gs.monthlyAvgMinutes != null ? `${Math.round(gs.monthlyAvgMinutes)} min` : "—"),
+                miniStatHtml("Selected week avg", gs.weeklyAvgMinutes != null ? `${Math.round(gs.weeklyAvgMinutes)} min` : "—")
+            ].join("");
+            renderWeekdayChart(
+                document.getElementById("analytics-guest-stay-chart"),
+                (gs.perWeekdayAvgMinutes || [0, 0, 0, 0, 0, 0, 0]).map(v => Math.round(v))
+            );
+        } catch (err) {
+            HW.showAlert(document.getElementById("analytics-alert"), err.message);
+        }
+    }
+
+    document.querySelectorAll("#guest-stay-weeks button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll("#guest-stay-weeks button").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            guestStayWeekOffset = parseInt(btn.dataset.week, 10);
+            renderGuestStay();
+        });
+    });
+
+    async function loadAnalytics() {
+        const alertEl = document.getElementById("analytics-alert");
+        HW.hideAlert(alertEl);
+
+        const [followers, checkins, loyalty, ratings, events, outOfTown] = await Promise.all([
+            HW.apiJson(`/api/breweries/${breweryId}/analytics/followers`).catch(() => null),
+            HW.apiJson(`/api/breweries/${breweryId}/analytics/checkins`).catch(() => null),
+            HW.apiJson(`/api/breweries/${breweryId}/analytics/checkin-loyalty`).catch(() => null),
+            HW.apiJson(`/api/breweries/${breweryId}/analytics/ratings`).catch(() => null),
+            HW.apiJson(`/api/breweries/${breweryId}/analytics/events`).catch(() => null),
+            HW.apiJson(`/api/breweries/${breweryId}/analytics/out-of-town`).catch(() => null)
+        ]);
+
+        if (!followers && !checkins && !ratings && !events) {
+            HW.showAlert(alertEl, "Couldn't load analytics right now.");
+        }
+
+        if (followers) {
+            document.getElementById("analytics-followers").innerHTML = [
+                miniStatHtml("Total followers", followers.totalFollowers),
+                miniStatHtml("This week (net)", (followers.thisWeekNet > 0 ? "+" : "") + followers.thisWeekNet),
+                miniStatHtml("This month (net)", (followers.thisMonthNet > 0 ? "+" : "") + followers.thisMonthNet),
+                miniStatHtml("Vs. last month", followers.monthOverMonthPercentChange == null ? "—" : `${followers.monthOverMonthPercentChange > 0 ? "+" : ""}${followers.monthOverMonthPercentChange}%`),
+                miniStatHtml("Unfollowed this month", followers.removalsThisMonth)
+            ].join("");
+        }
+
+        if (checkins) {
+            document.getElementById("analytics-checkins").innerHTML = [
+                miniStatHtml("Month to date", checkins.mtd),
+                miniStatHtml("Year to date", checkins.ytd),
+                miniStatHtml("Last 7 days", checkins.last7Days)
+            ].join("");
+            renderWeekdayChart(document.getElementById("analytics-checkins-chart"), checkins.perWeekday || [0, 0, 0, 0, 0, 0, 0]);
+        }
+
+        if (loyalty) {
+            document.getElementById("analytics-loyalty").innerHTML = [
+                miniStatHtml("1 visit", loyalty.once),
+                miniStatHtml("2–5 visits", loyalty.twoToFive),
+                miniStatHtml("6+ visits", loyalty.sixPlus)
+            ].join("");
+        }
+
+        if (ratings) {
+            document.getElementById("analytics-ratings-summary").innerHTML = [
+                miniStatHtml("Lifetime avg rating", ratings.lifetimeAvgRating != null ? ratings.lifetimeAvgRating.toFixed(1) : "—"),
+                miniStatHtml("Lifetime reviews", ratings.lifetimeCount)
+            ].join("");
+            const reviewsEl = document.getElementById("analytics-reviews");
+            if (!ratings.reviews || !ratings.reviews.length) {
+                reviewsEl.innerHTML = `<div class="empty-state">No reviews in the last 30 days.</div>`;
+            } else {
+                reviewsEl.innerHTML = ratings.reviews.map(r => `
+                    <div class="review-item">
+                        <div class="stars">${starString(r.stars)}</div>
+                        ${r.message ? `<div class="msg">${escapeHtml(r.message)}</div>` : ""}
+                        <div class="when">${formatDate(r.createdAt)}</div>
+                    </div>
+                `).join("");
+            }
+        }
+
+        if (events) {
+            document.getElementById("analytics-events-summary").innerHTML = [
+                miniStatHtml("Events (30d)", events.totalEvents30d),
+                miniStatHtml("Shares (YTD)", events.ytdShared),
+                miniStatHtml("Likes (YTD)", events.ytdLikes),
+                miniStatHtml("Saves (YTD)", events.ytdSaved)
+            ].join("");
+
+            document.getElementById("analytics-top-shared").innerHTML = tagListHtml(events.top3Shared);
+            document.getElementById("analytics-top-liked").innerHTML = tagListHtml(events.top3Liked);
+            document.getElementById("analytics-top-saved").innerHTML = tagListHtml(events.top3Saved);
+
+            const recentEl = document.getElementById("analytics-events-recent");
+            if (!events.recent || !events.recent.length) {
+                recentEl.innerHTML = `<div class="empty-state">No events in the last 30 days.</div>`;
+            } else {
+                recentEl.innerHTML = events.recent.map(ev => `
+                    <div class="item-row">
+                        <div class="item-info">
+                            <div class="item-title">${escapeHtml(ev.title)}</div>
+                            <div class="item-meta">${formatDate(ev.startAt)} · ${ev.likes} likes · ${ev.shared} shares · ${ev.saved} saves</div>
+                        </div>
+                    </div>
+                `).join("");
+            }
+        }
+
+        if (outOfTown) {
+            document.getElementById("analytics-out-of-town").innerHTML = [
+                miniStatHtml("Out-of-town guests (30d)", outOfTown.count30d),
+                miniStatHtml("Busiest day", outOfTown.busiestDay ? formatDate(outOfTown.busiestDay) : "—")
+            ].join("") + (outOfTown.busiestDay ? `<p class="section-sub" style="margin-top:12px;">Likely reason: ${escapeHtml(outOfTown.reason)}</p>` : "");
+        }
+
+        await renderGuestStay();
+    }
 
     // Kick off with the overview tab.
     loadOverview();
