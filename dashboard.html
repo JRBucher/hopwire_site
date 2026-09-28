@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=2">
+    <link rel="stylesheet" href="assets/styles.css?v=3">
 </head>
 <body>
     <div class="dash-topbar">
@@ -15,6 +15,7 @@
     <div class="dash-shell">
         <aside class="dash-sidebar">
             <div class="brewery-name" id="sidebar-brewery-name">&nbsp;</div>
+            <div class="brewery-tagline">Taproom Dashboard</div>
             <button class="dash-nav-item active" data-view="overview">Dashboard</button>
             <button class="dash-nav-item" data-view="events">Events</button>
             <button class="dash-nav-item" data-view="specials">Specials</button>
@@ -30,14 +31,14 @@
             <section class="dash-view active" id="view-overview">
                 <div class="dash-head">
                     <div>
-                        <h1 id="overview-heading">Overview</h1>
-                        <p>What's happening at your brewery right now.</p>
+                        <h1 id="overview-heading">Welcome back</h1>
+                        <p id="overview-subhead">What's happening at your brewery right now.</p>
                     </div>
                 </div>
                 <div class="stat-grid">
-                    <div class="card stat-card"><div class="num" id="stat-checkins">—</div><div class="label">Check-ins this week</div></div>
-                    <div class="card stat-card"><div class="num" id="stat-followers">—</div><div class="label">Followers</div></div>
-                    <div class="card stat-card"><div class="num" id="stat-upcoming">—</div><div class="label">Events in the next 7 days</div></div>
+                    <div class="card stat-card accent-ink"><div class="num" id="stat-checkins">—</div><div class="label">Check-ins this week</div></div>
+                    <div class="card stat-card accent-amber"><div class="num" id="stat-followers">—</div><div class="label">Followers</div></div>
+                    <div class="card stat-card accent-purple"><div class="num" id="stat-upcoming">—</div><div class="label">Events in the next 7 days</div></div>
                 </div>
                 <h2 style="font-size:1.05rem; margin-bottom:12px;">Next up</h2>
                 <div class="item-list" id="overview-upcoming"></div>
@@ -81,7 +82,21 @@
                         </div>
                     </form>
                 </div>
-                <div class="item-list" id="events-list"></div>
+                <div class="events-section">
+                    <div class="events-section-head">
+                        <h3>Upcoming</h3>
+                        <span class="count-badge" id="events-upcoming-count">0</span>
+                    </div>
+                    <div class="item-list" id="events-upcoming-list"></div>
+                </div>
+
+                <div class="events-section past-section">
+                    <div class="events-section-head">
+                        <h3>Past</h3>
+                        <span class="count-badge muted" id="events-past-count">0</span>
+                    </div>
+                    <div class="item-list" id="events-past-list"></div>
+                </div>
             </section>
 
             <!-- SPECIALS -->
@@ -305,10 +320,10 @@
         </main>
     </div>
 
-    <script src="assets/app.js?v=2"></script>
+    <script src="assets/app.js?v=3"></script>
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=2"></script>
+    <script src="assets/dashboard.js?v=3"></script>
 </body>
 </html>
