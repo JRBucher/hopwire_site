@@ -182,8 +182,11 @@ if (session) {
                                 panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">No photos shared for this event.</div>`;
                                 return;
                             }
-                            panel.innerHTML = `<div class="photo-grid">${photos.map(p => `
-                                <img src="data:image/jpeg;base64,${p.photoBytes}" alt="Shared photo" loading="lazy">
+                            panel.innerHTML = `<div class="photo-grid">${photos.map((p, i) => `
+                                <a class="photo-item" href="data:image/jpeg;base64,${p.photoBytes}" download="hopwire-event-${ev.id}-photo-${i + 1}.jpg" title="Save photo">
+                                    <img src="data:image/jpeg;base64,${p.photoBytes}" alt="Shared photo" loading="lazy">
+                                    <span class="photo-save-label">Save</span>
+                                </a>
                             `).join("")}</div>`;
                         } catch (err) {
                             panel.innerHTML = `<div class="empty-state" style="padding:12px 0;">Couldn't load photos.</div>`;
