@@ -35,14 +35,14 @@ const DAYS = [
     { key: "sunday", label: "Sunday" }
 ];
 
-// Keep in sync with the app's BreweryCheckoutPage.IsFoundingWindow() and the
-// backend's StripeEndpoints — the backend is authoritative for actual
-// pricing; this only decides whether to show the founding banner/label.
-function isFoundingWindow() {
-    const now = new Date();
-    const start = new Date(2026, 7, 17); // August is month index 7
-    const end = new Date(2026, 7, 31, 23, 59, 59);
-    return now >= start && now <= end;
+// Every signup now gets the same regular tier price with a 3-month free
+// trial (see the backend's StripeEndpoints — it sets TrialEnd 3 months out
+// on every checkout session). This just renders the matching due-date copy;
+// the backend is authoritative for the actual billing date.
+function formatFirstChargeDate() {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 3);
+    return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
 function loadState() {
@@ -287,9 +287,6 @@ document.querySelector('#wizard-step-2 [data-next]').addEventListener("click", (
 
 // ── STEP 3: PLAN ─────────────────────────────────────────────────────────────
 function renderTierList() {
-    const founding = isFoundingWindow();
-    document.getElementById("founding-banner").style.display = founding ? "block" : "none";
-
     document.getElementById("tier-list").innerHTML = TIERS.map(t => `
         <label class="tier-card ${state.tierKey === t.key ? "selected" : ""}" data-tier="${t.key}">
             <span>
@@ -327,9 +324,8 @@ document.querySelector('#wizard-step-3 [data-next]').addEventListener("click", (
     document.getElementById("summary-brewery").textContent = state.breweryName;
     document.getElementById("summary-plan").textContent = tier.label;
     document.getElementById("summary-price").textContent = `$${tier.price}/month`;
-    document.getElementById("summary-due-note").textContent = isFoundingWindow()
-        ? "Founding Brewery Partner rate — you won't be charged until March 1, 2027."
-        : "You won't be charged until checkout is complete.";
+    document.getElementById("summary-due-note").textContent =
+        `First 3 months free. Your card won't be charged until ${formatFirstChargeDate()}, then $${tier.price}/month after that.`;
 
     goToStep(4);
 });

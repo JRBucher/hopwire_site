@@ -38,14 +38,6 @@
             cardEl.innerHTML = `<h1>${title}</h1><p class="sub">${message}</p><div style="display:flex; flex-direction:column; gap:10px;">${actions}</div>`;
         }
 
-        // Matches BreweryCheckoutPage.IsFoundingWindow() / signup.js's isFoundingWindow().
-        function isFoundingWindow() {
-            const now = new Date();
-            const start = new Date(2026, 7, 17);
-            const end = new Date(2026, 7, 31, 23, 59, 59);
-            return now >= start && now <= end;
-        }
-
         function toHms(hhmm) {
             return hhmm && hhmm.length === 5 ? `${hhmm}:00` : "00:00:00";
         }
@@ -86,7 +78,10 @@
             }
 
             // ── Create the account (deferred until now, same as the app) ──
-            const role = isFoundingWindow() ? "business_owner_founding" : "business_owner_paid";
+            // Every signup now goes through the same 3-month-trial paid plan —
+            // no more founding-window role branch (matches the app, whose own
+            // founding window has also lapsed).
+            const role = "business_owner_paid";
             let signupResult;
             try {
                 const res = await fetch(`${HW.API_BASE}/api/auth/signup/brewery`, {
