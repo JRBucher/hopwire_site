@@ -9,6 +9,15 @@
 // return and finishes account creation (see that file for steps 5+).
 const STORAGE_KEY = "hw_signup_wizard";
 
+// Brewery name/address come straight from the API (any brewery owner can set
+// their own via signup or "Add a Location"), so they're untrusted for HTML —
+// same helper dashboard.js already uses for the same class of data.
+function escapeHtml(str) {
+    return (str ?? "").toString().replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+}
+
 const TIERS = [
     { key: "1 Location", label: "1 Location", price: 99, maxLocations: 1 },
     { key: "2–5 Locations", label: "2–5 Locations", price: 199, maxLocations: 5 },
@@ -145,9 +154,9 @@ breweryQueryEl.addEventListener("input", () => {
             return;
         }
         suggestionsEl.innerHTML = results.map(b => `
-            <div class="brewery-suggestion-item" data-id="${b.breweryId}" data-name="${(b.breweryName || "").replace(/"/g, "&quot;")}" data-address="${(b.streetAddress || "").replace(/"/g, "&quot;")}" data-phone="${(b.phoneNumber || "").replace(/"/g, "&quot;")}">
-                <div>${b.breweryName || ""}</div>
-                ${b.streetAddress ? `<div class="addr">${b.streetAddress}</div>` : ""}
+            <div class="brewery-suggestion-item" data-id="${b.breweryId}" data-name="${escapeHtml(b.breweryName)}" data-address="${escapeHtml(b.streetAddress)}" data-phone="${escapeHtml(b.phoneNumber)}">
+                <div>${escapeHtml(b.breweryName)}</div>
+                ${b.streetAddress ? `<div class="addr">${escapeHtml(b.streetAddress)}</div>` : ""}
             </div>
         `).join("");
         suggestionsEl.style.display = "block";
