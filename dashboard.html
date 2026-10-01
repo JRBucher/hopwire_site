@@ -72,6 +72,16 @@
                                 <input type="datetime-local" id="event-end" required>
                             </div>
                         </div>
+                        <div class="field" id="event-repeat-field">
+                            <label for="event-repeat">Repeats</label>
+                            <select id="event-repeat">
+                                <option value="none">Doesn't repeat</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="biweekly">Every 2 weeks</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                            <span class="hint">Posts one event per occurrence — editing or deleting later only affects that one.</span>
+                        </div>
                         <div class="field">
                             <label for="event-image">Photo <span class="hint">(optional)</span></label>
                             <input type="file" id="event-image" accept="image/*">

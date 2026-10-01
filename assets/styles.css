@@ -280,9 +280,10 @@ textarea { resize: vertical; min-height: 80px; }
 .section-toggle button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
 
 /* Analytics */
-.mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
-.mini-stat .num { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
-.mini-stat .label { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+.mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.mini-stat { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.mini-stat .num { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+.mini-stat .label { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .section-card { margin-bottom: 24px; }
 .section-card h2 { font-size: 1rem; margin-bottom: 4px; }
 .section-card .section-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }

@@ -115,12 +115,15 @@ if (session) {
     const eventAlert = document.getElementById("events-alert");
     const eventCancelBtn = document.getElementById("event-cancel-btn");
 
+    const eventRepeatField = document.getElementById("event-repeat-field");
+
     function resetEventForm() {
         eventForm.reset();
         document.getElementById("event-id").value = "";
         document.getElementById("events-form-title").textContent = "New event";
         document.getElementById("event-submit-btn").textContent = "Post Event";
         eventCancelBtn.style.display = "none";
+        eventRepeatField.style.display = "";
     }
 
     eventCancelBtn.addEventListener("click", resetEventForm);
@@ -158,6 +161,7 @@ if (session) {
                 document.getElementById("events-form-title").textContent = "Edit event";
                 document.getElementById("event-submit-btn").textContent = "Save changes";
                 eventCancelBtn.style.display = "inline-flex";
+                eventRepeatField.style.display = "none"; // repeat only applies when creating a new series
                 eventForm.scrollIntoView({ behavior: "smooth" });
             });
         }
@@ -260,6 +264,7 @@ if (session) {
                     body: JSON.stringify(Object.assign({ breweryId }, payload))
                 });
             } else {
+                payload.repeat = document.getElementById("event-repeat").value;
                 await HW.apiJson(`/api/breweries/${breweryId}/events`, {
                     method: "POST",
                     body: JSON.stringify(payload)
