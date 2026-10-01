@@ -209,8 +209,14 @@
 
                 <div class="card section-card">
                     <h2>Check-ins</h2>
-                    <p class="section-sub">Last 30 days by day of week.</p>
+                    <p class="section-sub">Hover a bar for that day's total. Browse week to week below.</p>
                     <div class="mini-grid" id="analytics-checkins"></div>
+                    <div class="week-offset-toggle" id="checkins-weeks">
+                        <button data-week="0" class="active">This week</button>
+                        <button data-week="1">1 week ago</button>
+                        <button data-week="2">2 weeks ago</button>
+                        <button data-week="3">3 weeks ago</button>
+                    </div>
                     <div class="weekday-chart" id="analytics-checkins-chart"></div>
                 </div>
 
@@ -232,15 +238,15 @@
                     <div style="display:flex; flex-direction:column; gap:14px;">
                         <div>
                             <div class="section-sub" style="margin-bottom:8px;">Most shared (YTD)</div>
-                            <div class="tag-list" id="analytics-top-shared"></div>
+                            <div class="rank-list" id="analytics-top-shared"></div>
                         </div>
                         <div>
                             <div class="section-sub" style="margin-bottom:8px;">Most liked (YTD)</div>
-                            <div class="tag-list" id="analytics-top-liked"></div>
+                            <div class="rank-list" id="analytics-top-liked"></div>
                         </div>
                         <div>
                             <div class="section-sub" style="margin-bottom:8px;">Most saved (YTD)</div>
-                            <div class="tag-list" id="analytics-top-saved"></div>
+                            <div class="rank-list" id="analytics-top-saved"></div>
                         </div>
                     </div>
                     <div class="item-list" id="analytics-events-recent" style="margin-top:16px;"></div>

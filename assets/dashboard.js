@@ -559,16 +559,20 @@ if (session) {
     // Mirrors BreweryAnalyticsController's 7 endpoints — the same data the
     // app's own brewery analytics screen shows.
     const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    // WEEKDAY_LABELS[i]'s offset in days from a Monday week-start (perWeekday
+    // arrays are Sun-first but weeks here always start Monday).
+    const WEEKDAY_OFFSETS_FROM_MONDAY = [6, 0, 1, 2, 3, 4, 5];
     let guestStayWeekOffset = 0;
+    let checkinsWeekOffset = 0;
 
     function miniStatHtml(label, value) {
         return `<div class="mini-stat"><div class="num">${value}</div><div class="label">${escapeHtml(label)}</div></div>`;
     }
 
-    function renderWeekdayChart(el, values) {
+    function renderWeekdayChart(el, values, tooltips) {
         const max = Math.max(1, ...values);
         el.innerHTML = values.map((v, i) => `
-            <div class="bar-col">
+            <div class="bar-col"${tooltips ? ` data-tooltip="${escapeHtml(tooltips[i])}"` : ""}>
                 <div class="bar" style="height:${Math.max(2, Math.round((v / max) * 100))}%"></div>
                 <div class="bar-label">${WEEKDAY_LABELS[i]}</div>
             </div>
@@ -580,11 +584,50 @@ if (session) {
         return "★".repeat(full) + "☆".repeat(5 - full);
     }
 
-    function tagListHtml(arr) {
-        return arr && arr.length
-            ? arr.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("")
-            : `<span style="color:var(--muted); font-size:0.85rem;">Not enough data yet</span>`;
+    function rankListHtml(rows, metricKey, metricLabel) {
+        if (!rows || !rows.length) {
+            return `<div class="empty-state">Not enough data yet</div>`;
+        }
+        return rows.map((r, i) => `
+            <div class="rank-row">
+                <div class="rank-badge r${i + 1}">${i + 1}</div>
+                <div class="rank-info">
+                    <div class="rank-title">${escapeHtml(r.title)}</div>
+                    <div class="rank-meta">${formatDateTimeRange(r.startAt)} · ${r[metricKey]} ${metricLabel}</div>
+                </div>
+            </div>
+        `).join("");
     }
+
+    async function renderCheckins() {
+        try {
+            const checkins = await HW.apiJson(`/api/breweries/${breweryId}/analytics/checkins?weekOffset=${checkinsWeekOffset}`);
+            document.getElementById("analytics-checkins").innerHTML = [
+                miniStatHtml("Month to date", checkins.mtd),
+                miniStatHtml("Year to date", checkins.ytd),
+                miniStatHtml("Last 7 days", checkins.last7Days)
+            ].join("");
+
+            const values = checkins.perWeekdaySelectedWeek || [0, 0, 0, 0, 0, 0, 0];
+            const tooltips = values.map((count, i) => {
+                const d = new Date(`${checkins.weekStart}T00:00:00`);
+                d.setDate(d.getDate() + WEEKDAY_OFFSETS_FROM_MONDAY[i]);
+                return `${formatDate(d)}: ${count} check-in${count === 1 ? "" : "s"}`;
+            });
+            renderWeekdayChart(document.getElementById("analytics-checkins-chart"), values, tooltips);
+        } catch (err) {
+            HW.showAlert(document.getElementById("analytics-alert"), err.message);
+        }
+    }
+
+    document.querySelectorAll("#checkins-weeks button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll("#checkins-weeks button").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            checkinsWeekOffset = parseInt(btn.dataset.week, 10);
+            renderCheckins();
+        });
+    });
 
     async function renderGuestStay() {
         try {
@@ -615,16 +658,15 @@ if (session) {
         const alertEl = document.getElementById("analytics-alert");
         HW.hideAlert(alertEl);
 
-        const [followers, checkins, loyalty, ratings, events, outOfTown] = await Promise.all([
+        const [followers, loyalty, ratings, events, outOfTown] = await Promise.all([
             HW.apiJson(`/api/breweries/${breweryId}/analytics/followers`).catch(() => null),
-            HW.apiJson(`/api/breweries/${breweryId}/analytics/checkins`).catch(() => null),
             HW.apiJson(`/api/breweries/${breweryId}/analytics/checkin-loyalty`).catch(() => null),
             HW.apiJson(`/api/breweries/${breweryId}/analytics/ratings`).catch(() => null),
             HW.apiJson(`/api/breweries/${breweryId}/analytics/events`).catch(() => null),
             HW.apiJson(`/api/breweries/${breweryId}/analytics/out-of-town`).catch(() => null)
         ]);
 
-        if (!followers && !checkins && !ratings && !events) {
+        if (!followers && !ratings && !events) {
             HW.showAlert(alertEl, "Couldn't load analytics right now.");
         }
 
@@ -636,15 +678,6 @@ if (session) {
                 miniStatHtml("Vs. last month", followers.monthOverMonthPercentChange == null ? "—" : `${followers.monthOverMonthPercentChange > 0 ? "+" : ""}${followers.monthOverMonthPercentChange}%`),
                 miniStatHtml("Unfollowed this month", followers.removalsThisMonth)
             ].join("");
-        }
-
-        if (checkins) {
-            document.getElementById("analytics-checkins").innerHTML = [
-                miniStatHtml("Month to date", checkins.mtd),
-                miniStatHtml("Year to date", checkins.ytd),
-                miniStatHtml("Last 7 days", checkins.last7Days)
-            ].join("");
-            renderWeekdayChart(document.getElementById("analytics-checkins-chart"), checkins.perWeekday || [0, 0, 0, 0, 0, 0, 0]);
         }
 
         if (loyalty) {
@@ -682,9 +715,9 @@ if (session) {
                 miniStatHtml("Saves (YTD)", events.ytdSaved)
             ].join("");
 
-            document.getElementById("analytics-top-shared").innerHTML = tagListHtml(events.top3Shared);
-            document.getElementById("analytics-top-liked").innerHTML = tagListHtml(events.top3Liked);
-            document.getElementById("analytics-top-saved").innerHTML = tagListHtml(events.top3Saved);
+            document.getElementById("analytics-top-shared").innerHTML = rankListHtml(events.top3Shared, "shared", "shares");
+            document.getElementById("analytics-top-liked").innerHTML = rankListHtml(events.top3Liked, "likes", "likes");
+            document.getElementById("analytics-top-saved").innerHTML = rankListHtml(events.top3Saved, "saved", "saves");
 
             const recentEl = document.getElementById("analytics-events-recent");
             if (!events.recent || !events.recent.length) {
@@ -708,7 +741,7 @@ if (session) {
             ].join("") + (outOfTown.busiestDay ? `<p class="section-sub" style="margin-top:12px;">Likely reason: ${escapeHtml(outOfTown.reason)}</p>` : "");
         }
 
-        await renderGuestStay();
+        await Promise.all([renderGuestStay(), renderCheckins()]);
     }
 
     // Kick off with the overview tab.
