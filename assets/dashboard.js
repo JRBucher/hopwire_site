@@ -744,6 +744,149 @@ if (session) {
         await Promise.all([renderGuestStay(), renderCheckins()]);
     }
 
+    // ── ADD LOCATION (multi-location parent accounts) ───────────────────────
+    const addLocationBtn = document.getElementById("add-location-btn");
+    const addLocationOverlay = document.getElementById("add-location-overlay");
+    const addLocationPanel = document.getElementById("add-location-panel");
+    const locationCreatedPanel = document.getElementById("location-created-panel");
+    const addLocationAlert = document.getElementById("add-location-alert");
+    const locationCreatedAlert = document.getElementById("location-created-alert");
+    const locationSearchEl = document.getElementById("location-search");
+    const locationSuggestionsEl = document.getElementById("location-suggestions");
+    const newLocationNameEl = document.getElementById("new-location-name");
+    const newLocationAddressEl = document.getElementById("new-location-address");
+    const newLocationEmailEl = document.getElementById("new-location-email");
+    let pickedLocation = null;
+    let locationSearchDebounce = null;
+    let lastCreatedEmail = "";
+    let lastCreatedTempPass = "";
+
+    // Only parent accounts on a multi-location plan, under their cap, can add
+    // a location — mirrors BreweryHomePage.xaml.cs's ApplyRoleVisibilityAsync;
+    // the server re-validates this on every call regardless.
+    HW.apiJson(`/api/breweries/${breweryId}/account-status`)
+        .then(status => { if (status.canAddLocations) addLocationBtn.style.display = "block"; })
+        .catch(err => console.error(err));
+
+    function resetAddLocationForm() {
+        pickedLocation = null;
+        locationSearchEl.value = "";
+        locationSuggestionsEl.style.display = "none";
+        newLocationNameEl.value = "";
+        newLocationAddressEl.value = "";
+        newLocationEmailEl.value = "";
+        HW.hideAlert(addLocationAlert);
+    }
+
+    addLocationBtn.addEventListener("click", () => {
+        resetAddLocationForm();
+        addLocationPanel.style.display = "block";
+        locationCreatedPanel.style.display = "none";
+        addLocationOverlay.style.display = "flex";
+    });
+
+    document.getElementById("add-location-cancel").addEventListener("click", () => {
+        addLocationOverlay.style.display = "none";
+    });
+
+    locationSearchEl.addEventListener("input", () => {
+        const term = locationSearchEl.value.trim();
+        pickedLocation = null;
+        clearTimeout(locationSearchDebounce);
+        if (term.length < 2) {
+            locationSuggestionsEl.style.display = "none";
+            return;
+        }
+        locationSearchDebounce = setTimeout(async () => {
+            try {
+                const results = await HW.apiJson(`/api/breweries/${breweryId}/unclaimed-search?term=${encodeURIComponent(term)}`);
+                if (!results.length) {
+                    locationSuggestionsEl.style.display = "none";
+                    return;
+                }
+                locationSuggestionsEl.innerHTML = results.map(b => `
+                    <div class="brewery-suggestion-item" data-id="${b.breweryId}" data-name="${escapeHtml(b.breweryName)}">
+                        <div>${escapeHtml(b.breweryName)}</div>
+                        ${b.streetAddress ? `<div class="addr">${escapeHtml(b.streetAddress)}</div>` : ""}
+                    </div>
+                `).join("");
+                locationSuggestionsEl.style.display = "block";
+            } catch {
+                locationSuggestionsEl.style.display = "none";
+            }
+        }, 350);
+    });
+
+    locationSuggestionsEl.addEventListener("click", (e) => {
+        const item = e.target.closest(".brewery-suggestion-item");
+        if (!item) return;
+        pickedLocation = { breweryId: parseInt(item.dataset.id, 10), breweryName: item.dataset.name };
+        locationSearchEl.value = item.dataset.name;
+        locationSuggestionsEl.style.display = "none";
+        newLocationNameEl.value = "";
+        newLocationAddressEl.value = "";
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".brewery-search-wrap")) locationSuggestionsEl.style.display = "none";
+    });
+
+    document.getElementById("add-location-save").addEventListener("click", async () => {
+        const email = newLocationEmailEl.value.trim().toLowerCase();
+        const newName = newLocationNameEl.value.trim();
+        const newAddress = newLocationAddressEl.value.trim();
+        const usingPicker = !!pickedLocation;
+        const usingManual = !!newName && !!newAddress;
+
+        if (!email || (!usingPicker && !usingManual)) {
+            HW.showAlert(addLocationAlert, "Pick a location from the list (or enter a new one), and provide a login email.");
+            return;
+        }
+
+        try {
+            // Temp password is generated server-side and returned exactly once —
+            // same contract as BreweriesController.AddLocation.
+            const result = await HW.apiJson(`/api/breweries/${breweryId}/locations`, {
+                method: "POST",
+                body: JSON.stringify({
+                    email,
+                    existingBreweryId: usingPicker ? pickedLocation.breweryId : null,
+                    newBreweryName: usingPicker ? null : newName,
+                    newBreweryAddress: usingPicker ? null : newAddress
+                })
+            });
+
+            lastCreatedEmail = result.email;
+            lastCreatedTempPass = result.tempPassword;
+
+            document.getElementById("created-location-name").textContent = result.createdBreweryName;
+            document.getElementById("created-location-email").textContent = result.email;
+            document.getElementById("created-location-temp-pass").textContent = result.tempPassword;
+
+            HW.hideAlert(locationCreatedAlert);
+            addLocationPanel.style.display = "none";
+            locationCreatedPanel.style.display = "block";
+        } catch (err) {
+            HW.showAlert(addLocationAlert, err.message);
+        }
+    });
+
+    document.getElementById("copy-location-credentials").addEventListener("click", async () => {
+        const text = `HopWire login\nEmail: ${lastCreatedEmail}\nTemp Password: ${lastCreatedTempPass}`;
+        try {
+            await navigator.clipboard.writeText(text);
+            HW.showAlert(locationCreatedAlert, "Credentials copied — text or email them to your location.", "success");
+        } catch {
+            HW.showAlert(locationCreatedAlert, "Couldn't copy automatically — select the text above and copy it manually.");
+        }
+    });
+
+    document.getElementById("dismiss-location-created").addEventListener("click", () => {
+        addLocationOverlay.style.display = "none";
+        lastCreatedEmail = "";
+        lastCreatedTempPass = "";
+    });
+
     // Kick off with the overview tab.
     loadOverview();
     loaded.overview = true;

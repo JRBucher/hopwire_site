@@ -1,12 +1,8 @@
 // Brewery owner signup wizard — mirrors the MAUI app's 4-step flow
 // (BusinessPageSignUp → BrewerySelectionPage → BreweryNumLocationPage →
-// BreweryCheckoutPage): nothing is written to the DB until Stripe checkout
-// completes, so an abandoned signup never leaves an orphaned account.
-//
-// Step 4's "Complete Subscription" hands off to Stripe's hosted checkout —
-// the browser actually navigates away and back, so all wizard state is
-// stashed in sessionStorage first; signup-complete.html reads it back on
-// return and finishes account creation (see that file for steps 5+).
+// final review step). Signups are free for now (Roles.BusinessFree on the
+// backend) — no payment collection, account is created immediately on
+// "Create Account".
 const STORAGE_KEY = "hw_signup_wizard";
 
 // Brewery name/address come straight from the API (any brewery owner can set
@@ -18,13 +14,6 @@ function escapeHtml(str) {
     }[c]));
 }
 
-const TIERS = [
-    { key: "1 Location", label: "1 Location", price: 99, maxLocations: 1 },
-    { key: "2–5 Locations", label: "2–5 Locations", price: 199, maxLocations: 5 },
-    { key: "6–10 Locations", label: "6–10 Locations", price: 299, maxLocations: 10 },
-    { key: "11+ Locations", label: "11+ Locations", price: 499, maxLocations: 999999 }
-];
-
 const DAYS = [
     { key: "monday", label: "Monday" },
     { key: "tuesday", label: "Tuesday" },
@@ -34,16 +23,6 @@ const DAYS = [
     { key: "saturday", label: "Saturday" },
     { key: "sunday", label: "Sunday" }
 ];
-
-// Every signup now gets the same regular tier price with a 3-month free
-// trial (see the backend's StripeEndpoints — it sets TrialEnd 3 months out
-// on every checkout session). This just renders the matching due-date copy;
-// the backend is authoritative for the actual billing date.
-function formatFirstChargeDate() {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 3);
-    return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-}
 
 function loadState() {
     try {
@@ -68,7 +47,7 @@ const state = Object.assign({
         acc[d.key] = { open: true, openTime: "12:00", closeTime: "21:00" };
         return acc;
     }, {}),
-    tierKey: "", tierLabel: "", monthlyPrice: 0, maxLocations: 1
+    maxLocations: 1
 }, loadState());
 
 const alertEl = document.getElementById("alert");
@@ -281,92 +260,112 @@ document.querySelector('#wizard-step-2 [data-next]').addEventListener("click", (
     });
 
     saveState();
-    renderTierList();
+    document.getElementById("locationCount").value = state.maxLocations || 1;
     goToStep(3);
 });
 
-// ── STEP 3: PLAN ─────────────────────────────────────────────────────────────
-function renderTierList() {
-    document.getElementById("tier-list").innerHTML = TIERS.map(t => `
-        <label class="tier-card ${state.tierKey === t.key ? "selected" : ""}" data-tier="${t.key}">
-            <span>
-                <input type="radio" name="tier" value="${t.key}" ${state.tierKey === t.key ? "checked" : ""}>
-                ${t.label}
-            </span>
-            <span class="tier-price">$${t.price}/mo</span>
-        </label>
-    `).join("");
-
-    document.querySelectorAll('#tier-list .tier-card').forEach(card => {
-        card.addEventListener("click", () => {
-            document.querySelectorAll('#tier-list .tier-card').forEach(c => c.classList.remove("selected"));
-            card.classList.add("selected");
-            card.querySelector('input[type="radio"]').checked = true;
-        });
-    });
-}
-renderTierList();
-
+// ── STEP 3: LOCATIONS ────────────────────────────────────────────────────────
 document.querySelector('#wizard-step-3 [data-back]').addEventListener("click", () => goToStep(2));
 document.querySelector('#wizard-step-3 [data-next]').addEventListener("click", () => {
-    const checked = document.querySelector('#tier-list input[name="tier"]:checked');
-    if (!checked) {
-        HW.showAlert(alertEl, "Please select how many locations you have.");
+    const count = parseInt(document.getElementById("locationCount").value, 10);
+    if (!count || count < 1) {
+        HW.showAlert(alertEl, "Please enter how many locations your brewery has.");
         return;
     }
-    const tier = TIERS.find(t => t.key === checked.value);
-    state.tierKey = tier.key;
-    state.tierLabel = tier.label;
-    state.monthlyPrice = tier.price;
-    state.maxLocations = tier.maxLocations;
+    state.maxLocations = count;
     saveState();
 
     document.getElementById("summary-brewery").textContent = state.breweryName;
-    document.getElementById("summary-plan").textContent = tier.label;
-    document.getElementById("summary-price").textContent = `$${tier.price}/month`;
-    document.getElementById("summary-due-note").textContent =
-        `First 3 months free. Your card won't be charged until ${formatFirstChargeDate()}, then $${tier.price}/month after that.`;
+    document.getElementById("summary-plan").textContent = `${count} location${count === 1 ? "" : "s"}`;
 
     goToStep(4);
 });
 
-// ── STEP 4: REVIEW & SUBSCRIBE ───────────────────────────────────────────────
+// ── STEP 4: REVIEW & CREATE ACCOUNT ──────────────────────────────────────────
 document.querySelector('#wizard-step-4 [data-back]').addEventListener("click", () => goToStep(3));
 
-document.getElementById("checkout-btn").addEventListener("click", async (e) => {
+function toHms(hhmm) {
+    return hhmm && hhmm.length === 5 ? `${hhmm}:00` : "00:00:00";
+}
+
+document.getElementById("create-account-btn").addEventListener("click", async (e) => {
     const btn = e.currentTarget;
     btn.disabled = true;
-    btn.textContent = "Redirecting to Stripe…";
+    btn.textContent = "Creating your account…";
     HW.hideAlert(alertEl);
 
     try {
         saveState();
-        const res = await fetch(`${HW.API_BASE}/api/stripe/create-checkout-session`, {
+
+        // Free for now — no payment collection. See Roles.BusinessFree on the
+        // backend; the role is still validated server-side regardless.
+        const res = await fetch(`${HW.API_BASE}/api/auth/signup/brewery`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                email: state.email,
-                tier: state.tierKey,
                 breweryName: state.breweryName,
-                successUrl: `${location.origin}${location.pathname.replace(/signup\.html$/, "")}signup-complete.html?session_id={CHECKOUT_SESSION_ID}`,
-                cancelUrl: `${location.origin}${location.pathname}?canceled=1`
+                email: state.email,
+                password: state.password,
+                phoneNumber: state.phone || null,
+                streetAddress: state.address || null,
+                existingBreweryId: state.isNewBrewery ? null : (state.existingBreweryId || null),
+                maxLocations: state.maxLocations || 1,
+                role: "business_owner_free"
             })
         });
-
         const body = await res.json().catch(() => null);
-        if (!res.ok || !body || !body.checkoutUrl) {
-            throw new Error((body && (body.error || body.detail)) || "Could not start checkout. Please try again.");
+        if (!res.ok) throw new Error((body && body.message) || "Couldn't create your account. Please try again.");
+
+        // From here on, every call is authenticated as the brewery we just created.
+        HW.setSession({
+            token: body.token,
+            breweryId: body.id,
+            breweryName: body.fullName,
+            email: body.email,
+            role: body.role
+        });
+
+        // ── Save brewery profile: socials, food, hours (best-effort) ──
+        try {
+            const h = state.hours || {};
+            const day = (key) => h[key] || { open: false, openTime: "00:00", closeTime: "00:00" };
+            await HW.apiJson(`/api/breweryprofile/${body.id}`, {
+                method: "PUT",
+                body: JSON.stringify({
+                    breweryId: body.id,
+                    ownerFullName: state.ownerName || null,
+                    ownerEmail: state.email || null,
+                    websiteUrl: state.websiteUrl || null,
+                    facebookUrl: state.facebookUrl || null,
+                    instagramUrl: state.instagramUrl || null,
+                    beermenuUrl: state.beerMenuUrl || null,
+                    foodMenuUrl: state.foodMenuUrl || null,
+                    foodType: state.foodType || "none",
+                    mondayOpen: toHms(day("monday").openTime), mondayClose: toHms(day("monday").closeTime),
+                    tuesdayOpen: toHms(day("tuesday").openTime), tuesdayClose: toHms(day("tuesday").closeTime),
+                    wednesdayOpen: toHms(day("wednesday").openTime), wednesdayClose: toHms(day("wednesday").closeTime),
+                    thursdayOpen: toHms(day("thursday").openTime), thursdayClose: toHms(day("thursday").closeTime),
+                    fridayOpen: toHms(day("friday").openTime), fridayClose: toHms(day("friday").closeTime),
+                    saturdayOpen: toHms(day("saturday").openTime), saturdayClose: toHms(day("saturday").closeTime),
+                    sundayOpen: toHms(day("sunday").openTime), sundayClose: toHms(day("sunday").closeTime)
+                })
+            });
+        } catch (err) {
+            console.error("brewery profile save failed", err);
         }
 
-        window.location.href = body.checkoutUrl;
+        // ── Notify HopWire of the new signup (best-effort, fire-and-forget) ──
+        fetch(`${HW.API_BASE}/api/notifications/new-brewery`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ BreweryId: body.id, BreweryName: state.breweryName, Address: state.address })
+        }).catch(() => {});
+
+        sessionStorage.removeItem(STORAGE_KEY);
+        window.location.href = "dashboard.html";
     } catch (err) {
         HW.showAlert(alertEl, err.message);
         btn.disabled = false;
-        btn.textContent = "Complete Subscription";
+        btn.textContent = "Create Account";
     }
 });
-
-// ── Resume where we left off (e.g. after canceling checkout) ────────────────
-if (new URLSearchParams(location.search).get("canceled") === "1") {
-    HW.showAlert(alertEl, "Checkout was canceled — you have not been charged. Pick up where you left off whenever you're ready.", "success");
-}

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=4">
+    <link rel="stylesheet" href="assets/styles.css?v=5">
 </head>
 <body>
     <div class="dash-topbar">
@@ -22,6 +22,7 @@
             <button class="dash-nav-item" data-view="releases">Beer Releases</button>
             <button class="dash-nav-item" data-view="analytics">Analytics</button>
             <button class="dash-nav-item" data-view="profile">Profile</button>
+            <button class="dash-nav-item" id="add-location-btn" style="display:none;">Add Locations</button>
             <button class="dash-nav-item logout" id="logout-btn">Log out</button>
         </aside>
 
@@ -336,10 +337,63 @@
         </main>
     </div>
 
+    <!-- ADD LOCATION MODAL -->
+    <div class="modal-overlay" id="add-location-overlay" style="display:none;">
+        <div class="card modal-card" id="add-location-panel">
+            <h2 style="font-size:1.1rem; margin-bottom:4px;">Add a location</h2>
+            <p class="section-sub" style="margin-bottom:16px;">Search for the location if it's already on HopWire, or add it manually. We'll create a separate login for it.</p>
+            <div class="alert" id="add-location-alert"></div>
+
+            <div class="field brewery-search-wrap">
+                <label for="location-search">Search existing locations</label>
+                <input type="text" id="location-search" placeholder="Start typing a brewery name…" autocomplete="off">
+                <div class="brewery-suggestions" id="location-suggestions" style="display:none;"></div>
+            </div>
+
+            <p style="margin: -8px 0 16px; font-size:0.85rem; color:var(--muted);">Can't find it? Enter a new location below instead.</p>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="new-location-name">New location name</label>
+                    <input type="text" id="new-location-name">
+                </div>
+                <div class="field">
+                    <label for="new-location-address">Street address</label>
+                    <input type="text" id="new-location-address">
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="new-location-email">Login email for this location</label>
+                <input type="email" id="new-location-email" autocomplete="off">
+            </div>
+
+            <div class="wizard-actions">
+                <button type="button" class="btn-pill outline" id="add-location-cancel">Cancel</button>
+                <button type="button" class="btn-pill primary" id="add-location-save">Add Location</button>
+            </div>
+        </div>
+
+        <div class="card modal-card" id="location-created-panel" style="display:none;">
+            <h2 style="font-size:1.1rem; margin-bottom:12px;">Location added</h2>
+            <div class="alert" id="location-created-alert"></div>
+            <div class="summary-card">
+                <div class="summary-row"><span>Location</span><strong id="created-location-name"></strong></div>
+                <div class="summary-row"><span>Email</span><strong id="created-location-email"></strong></div>
+                <div class="summary-row"><span>Temp password</span><strong id="created-location-temp-pass"></strong></div>
+            </div>
+            <p class="fine-print" style="margin-bottom:16px;">Share these credentials with that location so they can log in and set their own password.</p>
+            <div class="wizard-actions">
+                <button type="button" class="btn-pill outline" id="copy-location-credentials">Copy Credentials</button>
+                <button type="button" class="btn-pill primary" id="dismiss-location-created">Done</button>
+            </div>
+        </div>
+    </div>
+
     <script src="assets/app.js?v=4"></script>
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=4"></script>
+    <script src="assets/dashboard.js?v=5"></script>
 </body>
 </html>

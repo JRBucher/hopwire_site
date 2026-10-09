@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=4">
+    <link rel="stylesheet" href="assets/styles.css?v=5">
 </head>
 <body>
     <nav class="site-nav">
@@ -21,7 +21,7 @@
             <div class="wizard-progress" id="wizard-progress">
                 <div class="step active" data-step="1"><span class="step-num">1</span><span class="step-label">Account</span></div>
                 <div class="step" data-step="2"><span class="step-num">2</span><span class="step-label">Brewery</span></div>
-                <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">Plan</span></div>
+                <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">Locations</span></div>
                 <div class="step" data-step="4"><span class="step-num">4</span><span class="step-label">Review</span></div>
             </div>
 
@@ -125,29 +125,30 @@
 
             <!-- STEP 3: PLAN -->
             <section class="wizard-step" id="wizard-step-3">
-                <h1>Choose your plan</h1>
-                <p class="sub" id="plan-sub">Step 3 of 4 — based on how many locations you have.</p>
-                <h3>FIRST 3 MONTHS FREE • ALL PLANS • ALL LOCATIONS</h3>
-                <div class="tier-list" id="tier-list"></div>
+                <h1>How many locations does your brewery have?</h1>
+                <p class="sub" id="plan-sub">Step 3 of 4 — this just helps us set up your account correctly.</p>
+                <div class="field">
+                    <label for="locationCount">Number of locations</label>
+                    <input type="number" id="locationCount" min="1" step="1" value="1" required>
+                </div>
                 <div class="wizard-actions">
                     <button type="button" class="btn-pill outline" data-back>Back</button>
                     <button type="button" class="btn-pill primary" data-next>Continue</button>
                 </div>
             </section>
 
-            <!-- STEP 4: REVIEW & SUBSCRIBE -->
+            <!-- STEP 4: REVIEW & CREATE ACCOUNT -->
             <section class="wizard-step" id="wizard-step-4">
-                <h1>Review &amp; subscribe</h1>
-                <p class="sub">Step 4 of 4 — you'll finish this on Stripe's secure checkout page.</p>
+                <h1>Review &amp; create your account</h1>
+                <p class="sub">Step 4 of 4 — no credit card required.</p>
                 <div class="summary-card">
                     <div class="summary-row"><span>Brewery</span><strong id="summary-brewery"></strong></div>
-                    <div class="summary-row"><span>Plan</span><strong id="summary-plan"></strong></div>
-                    <div class="summary-row"><span>Price</span><strong id="summary-price"></strong></div>
+                    <div class="summary-row"><span>Locations</span><strong id="summary-plan"></strong></div>
                 </div>
-                <p class="fine-print" id="summary-due-note">First 3 months free. You won't be charged until checkout is complete.</p>
+                <p class="fine-print" id="summary-due-note">HopWire is currently free to use. This is subject to change to a paid monthly subscription in the future, with advance notice before any pricing takes effect.</p>
                 <div class="wizard-actions">
                     <button type="button" class="btn-pill outline" data-back>Back</button>
-                    <button type="button" class="btn-pill primary" id="checkout-btn">Complete Subscription</button>
+                    <button type="button" class="btn-pill primary" id="create-account-btn">Create Account</button>
                 </div>
             </section>
 
@@ -156,6 +157,6 @@
     </div>
 
     <script src="assets/app.js?v=4"></script>
-    <script src="assets/signup.js?v=1"></script>
+    <script src="assets/signup.js?v=2"></script>
 </body>
 </html>

@@ -106,6 +106,14 @@ nav.site-nav {
     padding: 24px;
 }
 
+/* Modal */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(22, 22, 26, 0.5);
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px; z-index: 100;
+}
+.modal-card { width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+
 /* Forms */
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .field label { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
@@ -397,16 +405,6 @@ textarea { resize: vertical; min-height: 80px; }
 .hours-open-toggle { display: flex; align-items: center; gap: 6px; color: var(--muted); width: 66px; flex-shrink: 0; }
 .hours-row input[type="time"] { padding: 6px 8px; font-size: 0.82rem; width: 110px; }
 .hours-row.is-closed input[type="time"] { opacity: 0.4; }
-
-.tier-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
-.tier-card {
-    display: flex; align-items: center; justify-content: space-between;
-    border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px;
-    cursor: pointer; font-size: 0.95rem; font-weight: 500;
-}
-.tier-card input { margin-right: 12px; }
-.tier-card.selected { border-color: var(--accent); background: var(--accent-soft); }
-.tier-price { font-weight: 700; }
 
 .summary-card { border: 1px solid var(--line); border-radius: 12px; padding: 6px 18px; margin-bottom: 16px; }
 .summary-row { display: flex; justify-content: space-between; padding: 10px 0; font-size: 0.92rem; }
