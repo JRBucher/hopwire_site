@@ -167,7 +167,16 @@ textarea { resize: vertical; min-height: 80px; }
 .auth-card .btn-pill { width: 100%; margin-top: 4px; }
 .auth-foot { text-align: center; font-size: 0.9rem; color: var(--muted); margin-top: 20px; }
 
-/* Dashboard shell */
+/* Dashboard shell — the whole document never scrolls; only .dash-main does.
+   (A sticky/fixed chrome on a scrolling document rubber-bands independently
+   of the page on trackpad overscroll, which reads as the top bar "bouncing"
+   — containing the scroll to one pane avoids that entirely.) */
+body.dash-body {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
 .dash-topbar {
     display: flex;
     align-items: baseline;
@@ -175,14 +184,12 @@ textarea { resize: vertical; min-height: 80px; }
     padding: 16px 24px;
     border-bottom: 1px solid var(--line);
     background: var(--bg);
-    position: sticky;
-    top: 0;
-    z-index: 40;
+    flex-shrink: 0;
     /* Plain branding, deliberately not a link — this is the logged-in app
        shell, not a marketing page, so there's nowhere it should navigate to. */
     cursor: default;
 }
-.dash-shell { display: flex; min-height: calc(100vh - 73px); }
+.dash-shell { display: flex; flex: 1; min-height: 0; }
 .dash-sidebar {
     width: 220px;
     flex-shrink: 0;
@@ -191,12 +198,7 @@ textarea { resize: vertical; min-height: 80px; }
     display: flex;
     flex-direction: column;
     gap: 4px;
-    position: fixed;
-    top: 73px;
-    left: 0;
-    bottom: 0;
     overflow-y: auto;
-    z-index: 30;
 }
 .dash-sidebar .brewery-name {
     color: #fff;
@@ -234,7 +236,7 @@ textarea { resize: vertical; min-height: 80px; }
 .dash-nav-item.active { background: var(--accent); color: #fff; }
 .dash-nav-item.logout { margin-top: auto; color: #b9b7c9; }
 
-.dash-main { flex: 1; margin-left: 220px; padding: 32px 40px; min-width: 0; }
+.dash-main { flex: 1; overflow-y: auto; padding: 32px 40px; min-width: 0; }
 .dash-view { display: none; }
 .dash-view.active { display: block; }
 .dash-head {
@@ -249,9 +251,9 @@ textarea { resize: vertical; min-height: 80px; }
 .dash-head p { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
-.stat-card { display: flex; flex-direction: column; gap: 10px; }
-.stat-card .num { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
-.stat-card .label { color: var(--muted); font-size: 0.85rem; }
+.stat-card { display: flex; flex-direction: column; gap: 6px; }
+.stat-card .label { color: var(--muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-card .num { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.02em; }
 
 /* Day chip — small date tile used on list rows (events, specials, releases) */
 .day-chip {
@@ -263,10 +265,13 @@ textarea { resize: vertical; min-height: 80px; }
 .day-chip .day { font-size: 1.05rem; }
 .icon-muted { background: var(--line); color: var(--muted); }
 
-/* Recurring event series — collapses repeated occurrences into one row */
+/* Recurring event series — collapses repeated occurrences into one row.
+   Given a tinted header (rather than plain white/card) so it reads as its
+   own distinct control against both the page background and muted/faded
+   past-event rows around it, in either the upcoming or past list. */
 .series-group {
     background: var(--card);
-    border: 1px solid var(--line);
+    border: 1px solid var(--accent-soft);
     border-radius: 12px;
     overflow: hidden;
 }
@@ -276,16 +281,16 @@ textarea { resize: vertical; min-height: 80px; }
     align-items: center;
     gap: 14px;
     padding: 14px 18px;
-    background: none;
+    background: var(--accent-soft);
     border: none;
     cursor: pointer;
     font-family: inherit;
     text-align: left;
 }
-.series-header:hover { background: var(--bg); }
+.series-header:hover { background: #ebe5fb; }
 .series-icon {
     flex: 0 0 38px; width: 38px; height: 38px; border-radius: 10px;
-    background: var(--accent-soft); color: var(--accent);
+    background: #fff; color: var(--accent);
     display: flex; align-items: center; justify-content: center;
     font-size: 1rem; flex-shrink: 0;
 }
@@ -559,14 +564,12 @@ textarea { resize: vertical; min-height: 80px; }
 @media (max-width: 900px) {
     .dash-shell { flex-direction: column; }
     .dash-sidebar {
-        position: static;
-        top: auto; left: auto; bottom: auto;
-        width: 100%; flex-direction: row; overflow-x: auto; overflow-y: visible; padding: 12px;
+        width: 100%; flex-shrink: 0;
+        flex-direction: row; overflow-x: auto; overflow-y: visible; padding: 12px;
     }
     .dash-sidebar .brewery-name { display: none; }
     .dash-nav-item.logout { margin-top: 0; margin-left: auto; }
-    .dash-main { margin-left: 0; padding: 24px 20px; }
-    .dash-topbar { position: static; }
+    .dash-main { padding: 24px 20px; }
 }
 @media (max-width: 760px) {
     .nav-text { display: none; }

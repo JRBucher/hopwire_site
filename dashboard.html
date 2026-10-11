@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=7">
+    <link rel="stylesheet" href="assets/styles.css?v=8">
 </head>
-<body>
+<body class="dash-body">
     <div class="dash-topbar">
         <span class="name"><span class="mark"></span> HopWire</span>
         <span class="tagline nav-text">for Brewery Owners</span>
@@ -38,19 +38,16 @@
                 </div>
                 <div class="stat-grid">
                     <div class="card stat-card">
-                        <div class="section-icon icon-blue">C</div>
-                        <div class="num" id="stat-checkins">—</div>
                         <div class="label">Check-ins this week</div>
+                        <div class="num" id="stat-checkins">—</div>
                     </div>
                     <div class="card stat-card">
-                        <div class="section-icon icon-amber">F</div>
-                        <div class="num" id="stat-followers">—</div>
                         <div class="label">Followers</div>
+                        <div class="num" id="stat-followers">—</div>
                     </div>
                     <div class="card stat-card">
-                        <div class="section-icon icon-purple">E</div>
-                        <div class="num" id="stat-upcoming">—</div>
                         <div class="label">Events in the next 7 days</div>
+                        <div class="num" id="stat-upcoming">—</div>
                     </div>
                 </div>
                 <div class="section-card-head">
@@ -474,6 +471,6 @@
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=7"></script>
+    <script src="assets/dashboard.js?v=8"></script>
 </body>
 </html>
