@@ -259,23 +259,24 @@ body.dash-body {
 .stat-card .num { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.02em; }
 
 /* ============================================================
-   Gradient shell direction (picked over the warm/dark alternatives) —
-   scoped off Analytics throughout, same as the rest of this file's
-   non-Analytics overrides. Topbar is shared chrome (not part of any
-   one view) so its gradient applies regardless of which tab is active.
+   Gradient shell direction (picked over the warm/dark alternatives).
+   The dash-head banner and topbar apply to every view, Analytics
+   included — it's shell/header chrome, not the page content, which is
+   why the rest of this file's non-Analytics overrides (stat cards,
+   list rows, empty states, the new per-page layouts below) still
+   scope themselves off Analytics.
    ============================================================ */
 .dash-topbar { background: linear-gradient(135deg, #4b2fb0, var(--accent)); }
 
-.dash-view:not(#view-analytics) .dash-head {
+.dash-head {
     background: linear-gradient(135deg, var(--accent) 0%, var(--chart-blue) 100%);
     border-radius: 20px;
     padding: 28px 32px;
     color: #fff;
     box-shadow: 0 20px 45px -25px rgba(79, 61, 188, 0.45);
 }
-.dash-view:not(#view-analytics) .dash-head h1,
-.dash-view:not(#view-analytics) .dash-head p { color: #fff; }
-.dash-view:not(#view-analytics) .dash-head p { opacity: 0.85; }
+.dash-head h1, .dash-head p { color: #fff; }
+.dash-head p { opacity: 0.85; }
 
 .dash-view:not(#view-analytics) .stat-card { border-radius: 18px; position: relative; overflow: hidden; padding-top: 28px; }
 .dash-view:not(#view-analytics) .stat-card::before {
