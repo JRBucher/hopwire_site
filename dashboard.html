@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=10">
+    <link rel="stylesheet" href="assets/styles.css?v=11">
 </head>
 <body class="dash-body">
     <div class="dash-topbar">
@@ -31,21 +31,27 @@
             <!-- OVERVIEW -->
             <section class="dash-view active" id="view-overview">
                 <div class="dash-head">
-                    <div>
-                        <h1 id="overview-heading">Welcome back</h1>
-                        <p id="overview-subhead">What's happening at your brewery right now.</p>
+                    <div class="dash-head-title">
+                        <div class="section-icon icon-purple dash-head-icon">D</div>
+                        <div>
+                            <h1 id="overview-heading">Welcome back</h1>
+                            <p id="overview-subhead">What's happening at your brewery right now.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="stat-grid">
                     <div class="card stat-card">
+                        <div class="section-icon icon-purple">C</div>
                         <div class="label">Check-ins this week</div>
                         <div class="num" id="stat-checkins">—</div>
                     </div>
                     <div class="card stat-card">
+                        <div class="section-icon icon-blue">F</div>
                         <div class="label">Followers</div>
                         <div class="num" id="stat-followers">—</div>
                     </div>
                     <div class="card stat-card">
+                        <div class="section-icon icon-green">U</div>
                         <div class="label">Events in the next 7 days</div>
                         <div class="num" id="stat-upcoming">—</div>
                     </div>
@@ -60,7 +66,10 @@
             <!-- EVENTS -->
             <section class="dash-view" id="view-events">
                 <div class="dash-head">
-                    <div><h1>Events</h1><p>Trivia nights, live music, tap takeovers — anything on the calendar.</p></div>
+                    <div class="dash-head-title">
+                        <div class="section-icon icon-blue dash-head-icon">E</div>
+                        <div><h1>Events</h1><p>Trivia nights, live music, tap takeovers — anything on the calendar.</p></div>
+                    </div>
                 </div>
                 <div class="alert" id="events-alert"></div>
                 <div class="card" style="margin-bottom:28px;">
@@ -128,7 +137,10 @@
             <!-- SPECIALS -->
             <section class="dash-view" id="view-specials">
                 <div class="dash-head">
-                    <div><h1>Specials</h1><p>Daily and recurring specials shown to your followers.</p></div>
+                    <div class="dash-head-title">
+                        <div class="section-icon icon-amber dash-head-icon">$</div>
+                        <div><h1>Specials</h1><p>Daily and recurring specials shown to your followers.</p></div>
+                    </div>
                 </div>
                 <div class="alert" id="specials-alert"></div>
                 <div class="card" style="margin-bottom:28px;">
@@ -169,7 +181,10 @@
             <!-- BEER RELEASES -->
             <section class="dash-view" id="view-releases">
                 <div class="dash-head">
-                    <div><h1>Beer Releases</h1><p>New beers, seasonal drops, and one-offs.</p></div>
+                    <div class="dash-head-title">
+                        <div class="section-icon icon-green dash-head-icon">B</div>
+                        <div><h1>Beer Releases</h1><p>New beers, seasonal drops, and one-offs.</p></div>
+                    </div>
                 </div>
                 <div class="alert" id="releases-alert"></div>
                 <div class="card" style="margin-bottom:28px;">
@@ -346,7 +361,10 @@
             <!-- PROFILE -->
             <section class="dash-view" id="view-profile">
                 <div class="dash-head">
-                    <div><h1>Profile</h1><p>What customers see about your brewery in the app.</p></div>
+                    <div class="dash-head-title">
+                        <div class="section-icon icon-purple dash-head-icon">P</div>
+                        <div><h1>Profile</h1><p>What customers see about your brewery in the app.</p></div>
+                    </div>
                 </div>
                 <div class="alert" id="profile-alert"></div>
 
@@ -370,6 +388,27 @@
                         </div>
                         <button type="submit" class="btn-pill primary small">Save</button>
                     </form>
+
+                    <div class="card-divider"></div>
+
+                    <div class="section-card-head" style="margin-bottom:12px;">
+                        <div class="section-icon icon-green">H</div>
+                        <div><h2 style="font-size:1rem;">Hours</h2><p class="section-sub">Shown on your brewery's profile in the app.</p></div>
+                    </div>
+                    <div class="series-group">
+                        <button type="button" class="series-header" id="hours-toggle" aria-expanded="false">
+                            <span class="series-icon">H</span>
+                            <span class="series-info">
+                                <span class="series-title">Weekly hours</span>
+                                <span class="series-meta" id="hours-summary">Loading…</span>
+                            </span>
+                            <span class="series-chevron">⌄</span>
+                        </button>
+                        <div class="series-body" id="hours-body" hidden>
+                            <div id="hours-rows"></div>
+                            <button type="button" class="btn-pill primary small" id="hours-save-btn" style="margin-top:14px; align-self:flex-start;">Save Hours</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -419,27 +458,6 @@
                         </div>
                         <button type="submit" class="btn-pill primary small">Save</button>
                     </form>
-                </div>
-
-                <div class="card" style="margin-top:24px;">
-                    <div class="section-card-head">
-                        <div class="section-icon icon-green">H</div>
-                        <div><h2 style="font-size:1rem;">Hours</h2><p class="section-sub">Shown on your brewery's profile in the app.</p></div>
-                    </div>
-                    <div class="series-group">
-                        <button type="button" class="series-header" id="hours-toggle" aria-expanded="false">
-                            <span class="series-icon">H</span>
-                            <span class="series-info">
-                                <span class="series-title">Weekly hours</span>
-                                <span class="series-meta" id="hours-summary">Loading…</span>
-                            </span>
-                            <span class="series-chevron">⌄</span>
-                        </button>
-                        <div class="series-body" id="hours-body" hidden>
-                            <div id="hours-rows"></div>
-                            <button type="button" class="btn-pill primary small" id="hours-save-btn" style="margin-top:14px; align-self:flex-start;">Save Hours</button>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="card" style="margin-top:24px;">

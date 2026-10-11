@@ -253,10 +253,21 @@ body.dash-body {
 .dash-head h1 { font-size: 1.5rem; letter-spacing: -0.02em; }
 .dash-head p { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
 
+/* Page-identity icon next to the title — gives every non-Analytics view the
+   same colored-badge treatment Analytics already has on its section cards,
+   so the dashboard shell doesn't look flat by comparison. */
+.dash-head-title { display: flex; align-items: center; gap: 16px; }
+.dash-head-icon { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 13px; font-size: 1.05rem; }
+
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
-.stat-card { display: flex; flex-direction: column; gap: 6px; }
+.stat-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.stat-card .section-icon { margin-bottom: 4px; }
 .stat-card .label { color: var(--muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 .stat-card .num { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.02em; }
+
+/* Brewery info + Hours live in one card now (Profile) — a hairline divider
+   reads as "next section" without needing a whole separate card. */
+.card-divider { height: 1px; background: var(--line); margin: 22px 0 20px; }
 
 /* Day chip — small date tile used on list rows (events, specials, releases) */
 .day-chip {
@@ -331,6 +342,26 @@ body.dash-body {
 .item-row .item-meta { color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
 .item-row .item-actions { display: flex; gap: 8px; }
 .empty-state { color: var(--muted); font-size: 0.9rem; padding: 24px; text-align: center; }
+
+/* Color-coded left edge on list rows outside Analytics, matching each row's
+   day-chip color — Overview/Events/Specials/Releases get a quick-scan accent
+   without changing Analytics' own recent-events list, which reuses .item-row. */
+.dash-view:not(#view-analytics) .item-row {
+    border-left-width: 3px;
+    border-left-color: var(--line);
+}
+.dash-view:not(#view-analytics) .item-row:has(.day-chip.icon-blue) { border-left-color: var(--chart-blue); }
+.dash-view:not(#view-analytics) .item-row:has(.day-chip.icon-amber) { border-left-color: var(--amber); }
+.dash-view:not(#view-analytics) .item-row:has(.day-chip.icon-green) { border-left-color: var(--chart-green); }
+
+/* Friendlier empty states outside Analytics (dashed outline instead of bare
+   muted text) — Analytics keeps its plain "Not enough data yet" style. */
+.dash-view:not(#view-analytics) .empty-state {
+    border: 1.5px dashed var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    padding: 36px 24px;
+}
 
 /* Upcoming vs. past events */
 .events-section { margin-bottom: 8px; }
