@@ -579,7 +579,47 @@ if (session) {
         { key: "sunday", label: "Sunday" }
     ];
 
+    function formatTime12h(hhmm) {
+        const [h, m] = hhmm.split(":").map(Number);
+        const period = h >= 12 ? "PM" : "AM";
+        const h12 = h % 12 === 0 ? 12 : h % 12;
+        return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+    }
+
+    // One-line "Tue–Thu 4:00 PM–10:00 PM, Fri–Sat 12:00 PM–12:00 AM, Sun Closed"
+    // summary for the collapsed hours dropdown — merges consecutive days that
+    // share identical hours instead of listing all 7 every time.
+    function summarizeHours(hours) {
+        const dayAbbr = { monday: "Mon", tuesday: "Tue", wednesday: "Wed", thursday: "Thu", friday: "Fri", saturday: "Sat", sunday: "Sun" };
+        const entries = DAYS.map(d => {
+            const openRaw = hours[`${d.key}Open`];
+            const closeRaw = hours[`${d.key}Close`];
+            const isOpen = !!openRaw && openRaw.slice(0, 5) !== "00:00";
+            const text = isOpen
+                ? `${formatTime12h(openRaw.slice(0, 5))}–${formatTime12h((closeRaw || "00:00:00").slice(0, 5))}`
+                : "Closed";
+            return { label: dayAbbr[d.key], text };
+        });
+
+        const groups = [];
+        entries.forEach(e => {
+            const last = groups[groups.length - 1];
+            if (last && last.text === e.text) {
+                last.labels.push(e.label);
+            } else {
+                groups.push({ text: e.text, labels: [e.label] });
+            }
+        });
+
+        return groups.map(g => {
+            const dayPart = g.labels.length > 1 ? `${g.labels[0]}–${g.labels[g.labels.length - 1]}` : g.labels[0];
+            return `${dayPart} ${g.text}`;
+        }).join(", ");
+    }
+
     function renderHoursRows(hours) {
+        document.getElementById("hours-summary").textContent = summarizeHours(hours);
+
         const el = document.getElementById("hours-rows");
         el.innerHTML = DAYS.map(d => {
             const openRaw = hours[`${d.key}Open`];
@@ -608,6 +648,14 @@ if (session) {
             });
         });
     }
+
+    wireSeriesToggles(document.getElementById("view-profile"));
+
+    document.querySelectorAll('input[name="profile-food-type"]').forEach(radio => {
+        radio.addEventListener("change", () => {
+            document.getElementById("food-menu-field").style.display = radio.value === "kitchen" && radio.checked ? "flex" : "none";
+        });
+    });
 
     async function loadProfile() {
         document.getElementById("password-email-display").textContent = session.email || "your account email";
@@ -647,9 +695,12 @@ if (session) {
                 document.getElementById("website-url").value = p.websiteUrl || "";
                 document.getElementById("facebook-url").value = p.facebookUrl || "";
                 document.getElementById("instagram-url").value = p.instagramUrl || "";
-                document.getElementById("food-type").value = p.foodType || "";
                 document.getElementById("beer-menu-url").value = p.beerMenuUrl || "";
                 document.getElementById("food-menu-url").value = p.foodMenuUrl || "";
+                const hasKitchen = p.foodType === "kitchen";
+                document.getElementById("food-type-kitchen").checked = hasKitchen;
+                document.getElementById("food-type-none").checked = !hasKitchen;
+                document.getElementById("food-menu-field").style.display = hasKitchen ? "flex" : "none";
             }
         } catch (err) {
             console.error(err);
@@ -674,6 +725,7 @@ if (session) {
                 body: JSON.stringify(payload)
             });
             existingHours = payload;
+            document.getElementById("hours-summary").textContent = summarizeHours(payload);
             HW.showAlert(alertEl, "Hours saved.", "success");
         } catch (err) {
             HW.showAlert(alertEl, err.message);
@@ -706,6 +758,7 @@ if (session) {
         e.preventDefault();
         const alertEl = document.getElementById("profile-alert");
         HW.hideAlert(alertEl);
+        const foodType = document.querySelector('input[name="profile-food-type"]:checked').value;
         try {
             await HW.apiJson(`/api/breweryprofile/${breweryId}`, {
                 method: "PUT",
@@ -717,8 +770,8 @@ if (session) {
                     facebookUrl: document.getElementById("facebook-url").value.trim() || null,
                     instagramUrl: document.getElementById("instagram-url").value.trim() || null,
                     beermenuUrl: document.getElementById("beer-menu-url").value.trim() || null,
-                    foodMenuUrl: document.getElementById("food-menu-url").value.trim() || null,
-                    foodType: document.getElementById("food-type").value.trim() || null,
+                    foodMenuUrl: foodType === "kitchen" ? (document.getElementById("food-menu-url").value.trim() || null) : null,
+                    foodType,
                     mondayOpen: existingHours.mondayOpen ?? null,
                     mondayClose: existingHours.mondayClose ?? null,
                     tuesdayOpen: existingHours.tuesdayOpen ?? null,

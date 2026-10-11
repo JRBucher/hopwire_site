@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=9">
+    <link rel="stylesheet" href="assets/styles.css?v=10">
 </head>
 <body class="dash-body">
     <div class="dash-topbar">
@@ -392,6 +392,10 @@
                             <label for="website-url">Website</label>
                             <input type="url" id="website-url" placeholder="https://">
                         </div>
+                        <div class="field">
+                            <label for="beer-menu-url">Beer menu URL <span class="hint">(link to a PDF or webpage)</span></label>
+                            <input type="url" id="beer-menu-url" placeholder="https://">
+                        </div>
                         <div class="field-row">
                             <div class="field">
                                 <label for="facebook-url">Facebook</label>
@@ -403,18 +407,15 @@
                             </div>
                         </div>
                         <div class="field">
-                            <label for="food-type">Food</label>
-                            <input type="text" id="food-type" placeholder="Wood-fired pizza, food truck Thu–Sat…">
+                            <label>Food</label>
+                            <div class="radio-row">
+                                <label><input type="radio" name="profile-food-type" value="none" id="food-type-none" checked> No kitchen</label>
+                                <label><input type="radio" name="profile-food-type" value="kitchen" id="food-type-kitchen"> We have a kitchen / food menu</label>
+                            </div>
                         </div>
-                        <div class="field-row">
-                            <div class="field">
-                                <label for="beer-menu-url">Beer menu URL <span class="hint">(link to a PDF or webpage)</span></label>
-                                <input type="url" id="beer-menu-url" placeholder="https://">
-                            </div>
-                            <div class="field">
-                                <label for="food-menu-url">Food menu URL <span class="hint">(link to a PDF or webpage)</span></label>
-                                <input type="url" id="food-menu-url" placeholder="https://">
-                            </div>
+                        <div class="field" id="food-menu-field" style="display:none;">
+                            <label for="food-menu-url">Food menu URL <span class="hint">(link to a PDF or webpage)</span></label>
+                            <input type="url" id="food-menu-url" placeholder="https://">
                         </div>
                         <button type="submit" class="btn-pill primary small">Save</button>
                     </form>
@@ -425,8 +426,20 @@
                         <div class="section-icon icon-green">H</div>
                         <div><h2 style="font-size:1rem;">Hours</h2><p class="section-sub">Shown on your brewery's profile in the app.</p></div>
                     </div>
-                    <div id="hours-rows"></div>
-                    <button type="button" class="btn-pill primary small" id="hours-save-btn" style="margin-top:16px;">Save Hours</button>
+                    <div class="series-group">
+                        <button type="button" class="series-header" id="hours-toggle" aria-expanded="false">
+                            <span class="series-icon">H</span>
+                            <span class="series-info">
+                                <span class="series-title">Weekly hours</span>
+                                <span class="series-meta" id="hours-summary">Loading…</span>
+                            </span>
+                            <span class="series-chevron">⌄</span>
+                        </button>
+                        <div class="series-body" id="hours-body" hidden>
+                            <div id="hours-rows"></div>
+                            <button type="button" class="btn-pill primary small" id="hours-save-btn" style="margin-top:14px; align-self:flex-start;">Save Hours</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card" style="margin-top:24px;">
@@ -513,6 +526,6 @@
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=9"></script>
+    <script src="assets/dashboard.js?v=10"></script>
 </body>
 </html>
