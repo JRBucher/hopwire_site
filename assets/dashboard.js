@@ -63,6 +63,12 @@ if (session) {
         return iso.slice(0, 10);
     }
 
+    function dayChipHtml(iso, variant) {
+        const d = new Date(iso);
+        const mon = d.toLocaleDateString(undefined, { month: "short" });
+        return `<div class="day-chip icon-${variant}"><span class="mon">${mon}</span><span class="day">${d.getDate()}</span></div>`;
+    }
+
     // ── OVERVIEW ─────────────────────────────────────────────────────────────
     function timeOfDayGreeting() {
         const hour = new Date().getHours();
@@ -99,6 +105,7 @@ if (session) {
             }
             el.innerHTML = events.slice(0, 5).map(ev => `
                 <div class="item-row">
+                    ${dayChipHtml(ev.startAt, "blue")}
                     <div class="item-info">
                         <div class="item-title">${escapeHtml(ev.title)}</div>
                         <div class="item-meta">${formatDateTimeRange(ev.startAt, ev.endAt)}</div>
@@ -136,6 +143,7 @@ if (session) {
                <button class="btn-pill danger" data-action="delete">Delete</button>`;
         return `
             <div class="item-row ${isPast ? "is-past" : ""}" data-id="${ev.id}" style="align-items:flex-start;">
+                ${dayChipHtml(ev.startAt, isPast ? "muted" : "blue")}
                 <div class="item-info">
                     <div class="item-title">${escapeHtml(ev.title)}</div>
                     <div class="item-meta">${formatDateTimeRange(ev.startAt, ev.endAt)}</div>
@@ -144,6 +152,61 @@ if (session) {
                 <div class="item-actions">${actions}</div>
             </div>
         `;
+    }
+
+    // Groups events that share a title — the "Repeats" option on the form
+    // posts one real event row per occurrence (no shared series id comes
+    // back from the API), so a weekly series can be 50+ rows. Collapse
+    // same-title runs into one expandable group instead of listing them flat.
+    function groupEventsByTitle(list) {
+        const groups = [];
+        const index = new Map();
+        for (const ev of list) {
+            const key = (ev.title || "").trim().toLowerCase();
+            if (index.has(key)) {
+                groups[index.get(key)].items.push(ev);
+            } else {
+                index.set(key, groups.length);
+                groups.push({ title: ev.title, items: [ev] });
+            }
+        }
+        return groups;
+    }
+
+    function renderEventGroup(group, isPast) {
+        if (group.items.length === 1) {
+            return renderEventRow(group.items[0], isPast);
+        }
+        const first = group.items[0];
+        const count = group.items.length;
+        const nextLabel = isPast
+            ? `most recent ${formatDate(first.startAt)}`
+            : `next ${formatDateTimeRange(first.startAt, first.endAt)}`;
+        return `
+            <div class="series-group">
+                <button type="button" class="series-header" aria-expanded="false">
+                    <span class="series-icon">↻</span>
+                    <span class="series-info">
+                        <span class="series-title">${escapeHtml(group.title)}</span>
+                        <span class="series-meta">${count} ${isPast ? "past" : "upcoming"} · ${nextLabel}</span>
+                    </span>
+                    <span class="series-chevron">⌄</span>
+                </button>
+                <div class="series-body" hidden>
+                    ${group.items.map(ev => renderEventRow(ev, isPast)).join("")}
+                </div>
+            </div>
+        `;
+    }
+
+    function wireSeriesToggles(container) {
+        container.querySelectorAll(".series-header").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const expanded = btn.getAttribute("aria-expanded") === "true";
+                btn.setAttribute("aria-expanded", String(!expanded));
+                btn.nextElementSibling.hidden = expanded;
+            });
+        });
     }
 
     function wireEventRow(row, events) {
@@ -229,15 +292,17 @@ if (session) {
 
             const upcomingEl = document.getElementById("events-upcoming-list");
             upcomingEl.innerHTML = upcoming.length
-                ? upcoming.map(ev => renderEventRow(ev, false)).join("")
+                ? groupEventsByTitle(upcoming).map(g => renderEventGroup(g, false)).join("")
                 : `<div class="empty-state">Nothing on the calendar yet — post your first event above.</div>`;
             upcomingEl.querySelectorAll(".item-row").forEach(row => wireEventRow(row, events));
+            wireSeriesToggles(upcomingEl);
 
             const pastEl = document.getElementById("events-past-list");
             pastEl.innerHTML = past.length
-                ? past.map(ev => renderEventRow(ev, true)).join("")
+                ? groupEventsByTitle(past).map(g => renderEventGroup(g, true)).join("")
                 : `<div class="empty-state">No past events yet.</div>`;
             pastEl.querySelectorAll(".item-row").forEach(row => wireEventRow(row, events));
+            wireSeriesToggles(pastEl);
         } catch (err) {
             HW.showAlert(eventAlert, err.message);
         }
@@ -293,6 +358,7 @@ if (session) {
             }
             el.innerHTML = upcoming.slice(0, 30).map(s => `
                 <div class="item-row" data-id="${s.id}">
+                    ${dayChipHtml(s.date, "amber")}
                     <div class="item-info">
                         <div class="item-title">${escapeHtml(s.message)}</div>
                         <div class="item-meta">${formatDate(s.date)}</div>
@@ -368,6 +434,7 @@ if (session) {
             }
             el.innerHTML = releases.map(r => `
                 <div class="item-row" data-id="${r.id}">
+                    ${dayChipHtml(r.releaseDate, "green")}
                     <div class="item-info">
                         <div class="item-title">${escapeHtml(r.beerName)}${r.beerStyle ? ` — ${escapeHtml(r.beerStyle)}` : ""}</div>
                         <div class="item-meta">${formatDate(r.releaseDate)}${r.abv ? ` · ${r.abv}% ABV` : ""}</div>

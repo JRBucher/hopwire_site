@@ -174,6 +174,10 @@ textarea { resize: vertical; min-height: 80px; }
     gap: 10px;
     padding: 16px 24px;
     border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 40;
     /* Plain branding, deliberately not a link — this is the logged-in app
        shell, not a marketing page, so there's nowhere it should navigate to. */
     cursor: default;
@@ -187,6 +191,12 @@ textarea { resize: vertical; min-height: 80px; }
     display: flex;
     flex-direction: column;
     gap: 4px;
+    position: fixed;
+    top: 73px;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+    z-index: 30;
 }
 .dash-sidebar .brewery-name {
     color: #fff;
@@ -224,7 +234,7 @@ textarea { resize: vertical; min-height: 80px; }
 .dash-nav-item.active { background: var(--accent); color: #fff; }
 .dash-nav-item.logout { margin-top: auto; color: #b9b7c9; }
 
-.dash-main { flex: 1; padding: 32px 40px; min-width: 0; }
+.dash-main { flex: 1; margin-left: 220px; padding: 32px 40px; min-width: 0; }
 .dash-view { display: none; }
 .dash-view.active { display: block; }
 .dash-head {
@@ -239,12 +249,61 @@ textarea { resize: vertical; min-height: 80px; }
 .dash-head p { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
-.stat-card { position: relative; overflow: hidden; border-top: 3px solid transparent; }
-.stat-card.accent-ink { border-top-color: var(--ink); }
-.stat-card.accent-amber { border-top-color: var(--amber); }
-.stat-card.accent-purple { border-top-color: var(--accent); }
-.stat-card .num { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; }
-.stat-card .label { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+.stat-card { display: flex; flex-direction: column; gap: 10px; }
+.stat-card .num { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+.stat-card .label { color: var(--muted); font-size: 0.85rem; }
+
+/* Day chip — small date tile used on list rows (events, specials, releases) */
+.day-chip {
+    flex: 0 0 52px; width: 52px; height: 52px; border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-weight: 800; line-height: 1.15;
+}
+.day-chip .mon { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.day-chip .day { font-size: 1.05rem; }
+.icon-muted { background: var(--line); color: var(--muted); }
+
+/* Recurring event series — collapses repeated occurrences into one row */
+.series-group {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.series-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+.series-header:hover { background: var(--bg); }
+.series-icon {
+    flex: 0 0 38px; width: 38px; height: 38px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+}
+.series-info { flex: 1; min-width: 200px; }
+.series-title { font-weight: 600; font-size: 0.95rem; }
+.series-meta { color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
+.series-chevron { color: var(--muted); font-size: 0.8rem; transition: transform 0.15s ease; flex-shrink: 0; }
+.series-header[aria-expanded="true"] .series-chevron { transform: rotate(180deg); }
+.series-body {
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    padding: 12px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.series-body[hidden] { display: none; }
+.series-body .item-row { background: var(--card); }
 
 .item-list { display: flex; flex-direction: column; gap: 12px; }
 .item-row {
@@ -499,10 +558,15 @@ textarea { resize: vertical; min-height: 80px; }
 
 @media (max-width: 900px) {
     .dash-shell { flex-direction: column; }
-    .dash-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; }
+    .dash-sidebar {
+        position: static;
+        top: auto; left: auto; bottom: auto;
+        width: 100%; flex-direction: row; overflow-x: auto; overflow-y: visible; padding: 12px;
+    }
     .dash-sidebar .brewery-name { display: none; }
     .dash-nav-item.logout { margin-top: 0; margin-left: auto; }
-    .dash-main { padding: 24px 20px; }
+    .dash-main { margin-left: 0; padding: 24px 20px; }
+    .dash-topbar { position: static; }
 }
 @media (max-width: 760px) {
     .nav-text { display: none; }

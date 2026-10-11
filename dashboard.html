@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=6">
+    <link rel="stylesheet" href="assets/styles.css?v=7">
 </head>
 <body>
     <div class="dash-topbar">
@@ -37,11 +37,26 @@
                     </div>
                 </div>
                 <div class="stat-grid">
-                    <div class="card stat-card accent-ink"><div class="num" id="stat-checkins">—</div><div class="label">Check-ins this week</div></div>
-                    <div class="card stat-card accent-amber"><div class="num" id="stat-followers">—</div><div class="label">Followers</div></div>
-                    <div class="card stat-card accent-purple"><div class="num" id="stat-upcoming">—</div><div class="label">Events in the next 7 days</div></div>
+                    <div class="card stat-card">
+                        <div class="section-icon icon-blue">C</div>
+                        <div class="num" id="stat-checkins">—</div>
+                        <div class="label">Check-ins this week</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="section-icon icon-amber">F</div>
+                        <div class="num" id="stat-followers">—</div>
+                        <div class="label">Followers</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="section-icon icon-purple">E</div>
+                        <div class="num" id="stat-upcoming">—</div>
+                        <div class="label">Events in the next 7 days</div>
+                    </div>
                 </div>
-                <h2 style="font-size:1.05rem; margin-bottom:12px;">Next up</h2>
+                <div class="section-card-head">
+                    <div class="section-icon icon-green">N</div>
+                    <div><h2 style="font-size:1.05rem;">Next up</h2><p class="section-sub">What's on the calendar this week.</p></div>
+                </div>
                 <div class="item-list" id="overview-upcoming"></div>
             </section>
 
@@ -52,7 +67,10 @@
                 </div>
                 <div class="alert" id="events-alert"></div>
                 <div class="card" style="margin-bottom:28px;">
-                    <h2 id="events-form-title" style="font-size:1rem; margin-bottom:16px;">New event</h2>
+                    <div class="section-card-head">
+                        <div class="section-icon icon-blue">+</div>
+                        <div><h2 id="events-form-title" style="font-size:1rem;">New event</h2></div>
+                    </div>
                     <form id="event-form">
                         <input type="hidden" id="event-id">
                         <div class="field">
@@ -117,7 +135,10 @@
                 </div>
                 <div class="alert" id="specials-alert"></div>
                 <div class="card" style="margin-bottom:28px;">
-                    <h2 style="font-size:1rem; margin-bottom:16px;">New special</h2>
+                    <div class="section-card-head">
+                        <div class="section-icon icon-amber">$</div>
+                        <div><h2 style="font-size:1rem;">New special</h2></div>
+                    </div>
                     <form id="special-form">
                         <div class="field">
                             <label for="special-message">Message</label>
@@ -155,7 +176,10 @@
                 </div>
                 <div class="alert" id="releases-alert"></div>
                 <div class="card" style="margin-bottom:28px;">
-                    <h2 id="releases-form-title" style="font-size:1rem; margin-bottom:16px;">New release</h2>
+                    <div class="section-card-head">
+                        <div class="section-icon icon-green">B</div>
+                        <div><h2 id="releases-form-title" style="font-size:1rem;">New release</h2></div>
+                    </div>
                     <form id="release-form">
                         <input type="hidden" id="release-id">
                         <div class="field-row">
@@ -330,7 +354,10 @@
                 <div class="alert" id="profile-alert"></div>
 
                 <div class="card" style="margin-bottom:24px;">
-                    <h2 style="font-size:1rem; margin-bottom:16px;">Brewery info</h2>
+                    <div class="section-card-head">
+                        <div class="section-icon icon-purple">i</div>
+                        <div><h2 style="font-size:1rem;">Brewery info</h2></div>
+                    </div>
                     <form id="brewery-info-form">
                         <div class="field">
                             <label for="brewery-name">Brewery name</label>
@@ -349,7 +376,10 @@
                 </div>
 
                 <div class="card">
-                    <h2 style="font-size:1rem; margin-bottom:16px;">Contact &amp; links</h2>
+                    <div class="section-card-head">
+                        <div class="section-icon icon-blue">@</div>
+                        <div><h2 style="font-size:1rem;">Contact &amp; links</h2></div>
+                    </div>
                     <form id="brewery-contact-form">
                         <div class="field-row">
                             <div class="field">
@@ -444,6 +474,6 @@
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=6"></script>
+    <script src="assets/dashboard.js?v=7"></script>
 </body>
 </html>
