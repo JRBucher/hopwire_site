@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=5">
+    <link rel="stylesheet" href="assets/styles.css?v=6">
 </head>
 <body>
     <div class="dash-topbar">
@@ -202,73 +202,123 @@
                 </div>
                 <div class="alert" id="analytics-alert"></div>
 
-                <div class="card section-card">
-                    <h2>Followers</h2>
-                    <p class="section-sub">Net change = new follows minus unfollows.</p>
-                    <div class="mini-grid" id="analytics-followers"></div>
-                </div>
+                <div class="analytics-grid">
 
-                <div class="card section-card">
-                    <h2>Check-ins</h2>
-                    <p class="section-sub">Hover a bar for that day's total. Browse week to week below.</p>
-                    <div class="mini-grid" id="analytics-checkins"></div>
-                    <div class="week-offset-toggle" id="checkins-weeks">
-                        <button data-week="0" class="active">This week</button>
-                        <button data-week="1">1 week ago</button>
-                        <button data-week="2">2 weeks ago</button>
-                        <button data-week="3">3 weeks ago</button>
-                    </div>
-                    <div class="weekday-chart" id="analytics-checkins-chart"></div>
-                </div>
-
-                <div class="card section-card">
-                    <h2>Check-in loyalty</h2>
-                    <p class="section-sub">Distinct visitors in the last 30 days, by visit count.</p>
-                    <div class="mini-grid" id="analytics-loyalty"></div>
-                </div>
-
-                <div class="card section-card">
-                    <h2>Ratings</h2>
-                    <div class="mini-grid" id="analytics-ratings-summary" style="margin-bottom:16px;"></div>
-                    <div id="analytics-reviews"></div>
-                </div>
-
-                <div class="card section-card">
-                    <h2>Events</h2>
-                    <div class="mini-grid" id="analytics-events-summary" style="margin-bottom:16px;"></div>
-                    <div style="display:flex; flex-direction:column; gap:14px;">
-                        <div>
-                            <div class="section-sub" style="margin-bottom:8px;">Most shared (YTD)</div>
-                            <div class="rank-list" id="analytics-top-shared"></div>
+                    <!-- Followers -->
+                    <div class="card span-4">
+                        <div class="section-card-head">
+                            <div class="section-icon icon-purple">F</div>
+                            <div><h2>Followers</h2><p class="section-sub">Net = follows minus unfollows.</p></div>
                         </div>
-                        <div>
-                            <div class="section-sub" style="margin-bottom:8px;">Most liked (YTD)</div>
-                            <div class="rank-list" id="analytics-top-liked"></div>
+                        <div class="hero-number-row">
+                            <div class="hero-number" id="followers-total">—</div>
+                            <div class="trend-pill flat" id="followers-trend-pill">—</div>
                         </div>
-                        <div>
-                            <div class="section-sub" style="margin-bottom:8px;">Most saved (YTD)</div>
-                            <div class="rank-list" id="analytics-top-saved"></div>
+                        <div class="mini-grid" id="analytics-followers"></div>
+                    </div>
+
+                    <!-- Check-ins -->
+                    <div class="card span-5">
+                        <div class="section-card-head">
+                            <div class="section-icon icon-blue">C</div>
+                            <div><h2>Check-ins</h2><p class="section-sub">Hover a bar for that day's total.</p></div>
+                            <div class="week-offset-toggle" id="checkins-weeks">
+                                <button data-week="0" class="active">This week</button>
+                                <button data-week="1">1 wk ago</button>
+                                <button data-week="2">2 wks ago</button>
+                                <button data-week="3">3 wks ago</button>
+                            </div>
                         </div>
+                        <div class="mini-grid" id="analytics-checkins"></div>
+                        <div class="weekday-chart c-blue" id="analytics-checkins-chart"></div>
                     </div>
-                    <div class="item-list" id="analytics-events-recent" style="margin-top:16px;"></div>
-                </div>
 
-                <div class="card section-card">
-                    <h2>Guest stay duration</h2>
-                    <div class="week-offset-toggle" id="guest-stay-weeks">
-                        <button data-week="0" class="active">This week</button>
-                        <button data-week="1">1 week ago</button>
-                        <button data-week="2">2 weeks ago</button>
-                        <button data-week="3">3 weeks ago</button>
+                    <!-- Ratings -->
+                    <div class="card span-3">
+                        <div class="section-card-head">
+                            <div class="section-icon icon-amber">R</div>
+                            <div><h2>Ratings</h2></div>
+                        </div>
+                        <div id="analytics-ratings-sentiment"></div>
+                        <div class="mini-grid" id="analytics-ratings-summary"></div>
                     </div>
-                    <div class="mini-grid" id="analytics-guest-stay" style="margin-bottom:12px;"></div>
-                    <div class="weekday-chart" id="analytics-guest-stay-chart"></div>
-                </div>
 
-                <div class="card section-card">
-                    <h2>Out-of-town guests</h2>
-                    <p class="section-sub">Check-ins from more than 50 miles away, last 30 days.</p>
-                    <div class="mini-grid" id="analytics-out-of-town"></div>
+                    <!-- Latest reviews -->
+                    <div class="card span-6">
+                        <div class="section-card-head">
+                            <div class="section-icon icon-amber">R</div>
+                            <div><h2>Latest Reviews</h2><p class="section-sub">Last 30 days.</p></div>
+                        </div>
+                        <div id="analytics-reviews"></div>
+                    </div>
+
+                    <!-- Check-in loyalty -->
+                    <div class="card span-3">
+                        <div class="section-card-head">
+                            <div class="section-icon icon-green">L</div>
+                            <div><h2>Loyalty</h2><p class="section-sub">Last 30 days.</p></div>
+                        </div>
+                        <div id="analytics-loyalty"></div>
+                    </div>
+
+                    <!-- Engagement -->
+                    <div class="card span-3">
+                        <div class="section-card-head">
+                            <div class="section-icon icon-blue">En</div>
+                            <div><h2>Engagement</h2><p class="section-sub">Year to date.</p></div>
+                        </div>
+                        <div id="analytics-engagement"></div>
+                    </div>
+
+                    <!-- Events -->
+                    <div class="card span-7">
+                        <div class="section-card-head">
+                            <div class="section-icon icon-purple">Ev</div>
+                            <div><h2>Events</h2></div>
+                        </div>
+                        <div class="mini-grid" id="analytics-events-summary" style="margin-bottom:16px;"></div>
+                        <div class="rank-columns">
+                            <div>
+                                <div class="section-sub" style="margin-bottom:8px;">Most shared (YTD)</div>
+                                <div class="rank-list" id="analytics-top-shared"></div>
+                            </div>
+                            <div>
+                                <div class="section-sub" style="margin-bottom:8px;">Most liked (YTD)</div>
+                                <div class="rank-list" id="analytics-top-liked"></div>
+                            </div>
+                            <div>
+                                <div class="section-sub" style="margin-bottom:8px;">Most saved (YTD)</div>
+                                <div class="rank-list" id="analytics-top-saved"></div>
+                            </div>
+                        </div>
+                        <div class="item-list" id="analytics-events-recent" style="margin-top:16px;"></div>
+                    </div>
+
+                    <!-- Guest stay duration -->
+                    <div class="card span-5">
+                        <div class="section-card-head">
+                            <div class="section-icon icon-green">G</div>
+                            <div><h2>Guest Stay Duration</h2></div>
+                            <div class="week-offset-toggle" id="guest-stay-weeks">
+                                <button data-week="0" class="active">This week</button>
+                                <button data-week="1">1 wk ago</button>
+                                <button data-week="2">2 wks ago</button>
+                                <button data-week="3">3 wks ago</button>
+                            </div>
+                        </div>
+                        <div class="mini-grid" id="analytics-guest-stay" style="margin-bottom:12px;"></div>
+                        <div class="weekday-chart c-green" id="analytics-guest-stay-chart"></div>
+                    </div>
+
+                    <!-- Out-of-town guests -->
+                    <div class="card span-12">
+                        <div class="section-card-head">
+                            <div class="section-icon icon-purple">O</div>
+                            <div><h2>Out-of-Town Guests</h2><p class="section-sub">Check-ins from more than 50 miles away, last 30 days.</p></div>
+                        </div>
+                        <div class="mini-grid" id="analytics-out-of-town"></div>
+                    </div>
+
                 </div>
             </section>
 
@@ -394,6 +444,6 @@
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=5"></script>
+    <script src="assets/dashboard.js?v=6"></script>
 </body>
 </html>

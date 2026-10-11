@@ -569,6 +569,31 @@ if (session) {
         return `<div class="mini-stat"><div class="num">${value}</div><div class="label">${escapeHtml(label)}</div></div>`;
     }
 
+    function ringChartHtml(segments, centerNum, centerLabel) {
+        const total = segments.reduce((sum, seg) => sum + (seg.value || 0), 0);
+        let acc = 0;
+        const stops = total > 0
+            ? segments.map(seg => {
+                const start = (acc / total) * 360;
+                acc += (seg.value || 0);
+                const end = (acc / total) * 360;
+                return `${seg.color} ${start}deg ${end}deg`;
+            }).join(", ")
+            : "var(--line) 0deg 360deg";
+        const legend = segments.map(seg => `
+            <div class="ring-legend-item">
+                <span><span class="ring-legend-dot" style="background:${seg.color}"></span>${escapeHtml(seg.label)}</span>
+                <strong>${seg.value ?? 0}</strong>
+            </div>
+        `).join("");
+        return `
+            <div class="ring-chart" style="background:conic-gradient(${stops})">
+                <div class="ring-center"><div class="num">${centerNum}</div><div class="label">${escapeHtml(centerLabel)}</div></div>
+            </div>
+            <div class="ring-legend">${legend}</div>
+        `;
+    }
+
     function renderWeekdayChart(el, values, tooltips) {
         const max = Math.max(1, ...values);
         el.innerHTML = values.map((v, i) => `
@@ -671,39 +696,66 @@ if (session) {
         }
 
         if (followers) {
+            document.getElementById("followers-total").textContent = followers.totalFollowers;
+            const net = followers.thisWeekNet;
+            const trendEl = document.getElementById("followers-trend-pill");
+            trendEl.textContent = `${net > 0 ? "+" : ""}${net} this week`;
+            trendEl.className = "trend-pill " + (net > 0 ? "up" : net < 0 ? "down" : "flat");
             document.getElementById("analytics-followers").innerHTML = [
-                miniStatHtml("Total followers", followers.totalFollowers),
-                miniStatHtml("This week (net)", (followers.thisWeekNet > 0 ? "+" : "") + followers.thisWeekNet),
                 miniStatHtml("This month (net)", (followers.thisMonthNet > 0 ? "+" : "") + followers.thisMonthNet),
                 miniStatHtml("Vs. last month", followers.monthOverMonthPercentChange == null ? "—" : `${followers.monthOverMonthPercentChange > 0 ? "+" : ""}${followers.monthOverMonthPercentChange}%`),
-                miniStatHtml("Unfollowed this month", followers.removalsThisMonth)
+                miniStatHtml("Unfollowed", followers.removalsThisMonth)
             ].join("");
         }
 
         if (loyalty) {
-            document.getElementById("analytics-loyalty").innerHTML = [
-                miniStatHtml("1 visit", loyalty.once),
-                miniStatHtml("2–5 visits", loyalty.twoToFive),
-                miniStatHtml("6+ visits", loyalty.sixPlus)
-            ].join("");
+            const segs = [
+                { value: loyalty.once, color: "var(--chart-blue)", label: "1 visit" },
+                { value: loyalty.twoToFive, color: "var(--chart-green)", label: "2–5 visits" },
+                { value: loyalty.sixPlus, color: "var(--amber)", label: "6+ visits" }
+            ];
+            const total = segs.reduce((sum, s) => sum + (s.value || 0), 0);
+            document.getElementById("analytics-loyalty").innerHTML = ringChartHtml(segs, total, "Visitors");
         }
 
         if (ratings) {
+            const avg = ratings.lifetimeAvgRating;
+            const pct = avg != null ? Math.round((avg / 5) * 100) : null;
+            let mood = "No ratings yet", moodClass = "flat";
+            if (pct != null) {
+                if (pct >= 90) { mood = "Superb!"; moodClass = "up"; }
+                else if (pct >= 75) { mood = "Great!"; moodClass = "up"; }
+                else if (pct >= 60) { mood = "Good"; moodClass = "flat"; }
+                else { mood = "Needs attention"; moodClass = "down"; }
+            }
+            document.getElementById("analytics-ratings-sentiment").innerHTML = `
+                <div class="sentiment-ring ${moodClass}" style="--pct:${pct ?? 0}">
+                    <div class="sentiment-pct">${pct != null ? pct + "%" : "—"}</div>
+                </div>
+                <div class="sentiment-mood">${escapeHtml(mood)}</div>
+                <div class="sentiment-stars">${avg != null ? starString(avg) : ""}</div>
+            `;
             document.getElementById("analytics-ratings-summary").innerHTML = [
-                miniStatHtml("Lifetime avg rating", ratings.lifetimeAvgRating != null ? ratings.lifetimeAvgRating.toFixed(1) : "—"),
-                miniStatHtml("Lifetime reviews", ratings.lifetimeCount)
+                miniStatHtml("Avg rating", avg != null ? avg.toFixed(1) : "—"),
+                miniStatHtml("Reviews", ratings.lifetimeCount)
             ].join("");
             const reviewsEl = document.getElementById("analytics-reviews");
             if (!ratings.reviews || !ratings.reviews.length) {
                 reviewsEl.innerHTML = `<div class="empty-state">No reviews in the last 30 days.</div>`;
             } else {
-                reviewsEl.innerHTML = ratings.reviews.map(r => `
-                    <div class="review-item">
-                        <div class="stars">${starString(r.stars)}</div>
-                        ${r.message ? `<div class="msg">${escapeHtml(r.message)}</div>` : ""}
-                        <div class="when">${formatDate(r.createdAt)}</div>
-                    </div>
-                `).join("");
+                reviewsEl.innerHTML = ratings.reviews.map(r => {
+                    const n = Math.max(1, Math.min(5, Math.round(r.stars)));
+                    return `
+                        <div class="review-item">
+                            <div class="review-rating-badge r${n}">${n}★</div>
+                            <div class="review-body">
+                                <div class="stars">${starString(r.stars)}</div>
+                                ${r.message ? `<div class="msg">${escapeHtml(r.message)}</div>` : ""}
+                                <div class="when">${formatDate(r.createdAt)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
             }
         }
 
@@ -714,6 +766,14 @@ if (session) {
                 miniStatHtml("Likes (YTD)", events.ytdLikes),
                 miniStatHtml("Saves (YTD)", events.ytdSaved)
             ].join("");
+
+            const engSegs = [
+                { value: events.ytdShared, color: "var(--chart-blue)", label: "Shares" },
+                { value: events.ytdLikes, color: "var(--amber)", label: "Likes" },
+                { value: events.ytdSaved, color: "var(--chart-green)", label: "Saves" }
+            ];
+            const engTotal = engSegs.reduce((sum, s) => sum + (s.value || 0), 0);
+            document.getElementById("analytics-engagement").innerHTML = ringChartHtml(engSegs, engTotal, "Total");
 
             document.getElementById("analytics-top-shared").innerHTML = rankListHtml(events.top3Shared, "shared", "shares");
             document.getElementById("analytics-top-liked").innerHTML = rankListHtml(events.top3Liked, "likes", "likes");
