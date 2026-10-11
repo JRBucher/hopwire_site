@@ -182,13 +182,16 @@ body.dash-body {
     align-items: baseline;
     gap: 10px;
     padding: 16px 24px;
-    border-bottom: 1px solid var(--line);
-    background: var(--bg);
+    background: var(--ink);
     flex-shrink: 0;
     /* Plain branding, deliberately not a link — this is the logged-in app
        shell, not a marketing page, so there's nowhere it should navigate to. */
     cursor: default;
 }
+.dash-topbar .name { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.01em; }
+.dash-topbar .name .hop { color: #EDECF4; }
+.dash-topbar .name .wire { color: #B896FF; }
+.dash-topbar .tagline { color: #8b899c; font-size: 0.74rem; font-weight: 500; }
 .dash-shell { display: flex; flex: 1; min-height: 0; }
 .dash-sidebar {
     width: 220px;

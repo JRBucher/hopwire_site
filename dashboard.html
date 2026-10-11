@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=8">
+    <link rel="stylesheet" href="assets/styles.css?v=9">
 </head>
 <body class="dash-body">
     <div class="dash-topbar">
-        <span class="name"><span class="mark"></span> HopWire</span>
+        <span class="name"><span class="hop">Hop</span><span class="wire">Wire</span></span>
         <span class="tagline nav-text">for Brewery Owners</span>
     </div>
 
@@ -406,7 +406,49 @@
                             <label for="food-type">Food</label>
                             <input type="text" id="food-type" placeholder="Wood-fired pizza, food truck Thu–Sat…">
                         </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="beer-menu-url">Beer menu URL <span class="hint">(link to a PDF or webpage)</span></label>
+                                <input type="url" id="beer-menu-url" placeholder="https://">
+                            </div>
+                            <div class="field">
+                                <label for="food-menu-url">Food menu URL <span class="hint">(link to a PDF or webpage)</span></label>
+                                <input type="url" id="food-menu-url" placeholder="https://">
+                            </div>
+                        </div>
                         <button type="submit" class="btn-pill primary small">Save</button>
+                    </form>
+                </div>
+
+                <div class="card" style="margin-top:24px;">
+                    <div class="section-card-head">
+                        <div class="section-icon icon-green">H</div>
+                        <div><h2 style="font-size:1rem;">Hours</h2><p class="section-sub">Shown on your brewery's profile in the app.</p></div>
+                    </div>
+                    <div id="hours-rows"></div>
+                    <button type="button" class="btn-pill primary small" id="hours-save-btn" style="margin-top:16px;">Save Hours</button>
+                </div>
+
+                <div class="card" style="margin-top:24px;">
+                    <div class="section-card-head">
+                        <div class="section-icon icon-amber">P</div>
+                        <div><h2 style="font-size:1rem;">Password</h2><p class="section-sub" id="password-step1-sub">Send a reset code to your account email to update your password.</p></div>
+                    </div>
+                    <div class="alert" id="password-alert"></div>
+                    <form id="password-request-form">
+                        <p class="section-sub" style="margin-bottom:14px;">Code goes to <strong id="password-email-display">—</strong></p>
+                        <button type="submit" class="btn-pill primary small" id="password-request-btn">Send Reset Code</button>
+                    </form>
+                    <form id="password-reset-form" style="display:none;">
+                        <div class="field">
+                            <label for="password-code">Reset code</label>
+                            <input type="text" id="password-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required>
+                        </div>
+                        <div class="field">
+                            <label for="password-new">New password</label>
+                            <input type="password" id="password-new" autocomplete="new-password" minlength="8" required>
+                        </div>
+                        <button type="submit" class="btn-pill primary small" id="password-reset-btn">Update Password</button>
                     </form>
                 </div>
             </section>
@@ -471,6 +513,6 @@
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=8"></script>
+    <script src="assets/dashboard.js?v=9"></script>
 </body>
 </html>

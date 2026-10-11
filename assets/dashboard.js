@@ -562,12 +562,56 @@ if (session) {
 
     // ── PROFILE ──────────────────────────────────────────────────────────────
     // brewery_profile's write endpoint upserts hours alongside profile fields
-    // in one call, so the hours this session read on load are sent back
-    // unchanged — this dashboard doesn't expose hours editing yet, and saving
-    // without them would silently null the brewery's existing hours out.
+    // in one call (unconditionally — NULL included — unlike the dedicated
+    // /hours PUT below, which only touches fields it's given), so whatever
+    // this session last read into existingHours is what the contact form
+    // sends back on every save. The Hours card's own save keeps this in sync
+    // so a later contact-form save can't revert it to a stale value.
     let existingHours = {};
 
+    const DAYS = [
+        { key: "monday", label: "Monday" },
+        { key: "tuesday", label: "Tuesday" },
+        { key: "wednesday", label: "Wednesday" },
+        { key: "thursday", label: "Thursday" },
+        { key: "friday", label: "Friday" },
+        { key: "saturday", label: "Saturday" },
+        { key: "sunday", label: "Sunday" }
+    ];
+
+    function renderHoursRows(hours) {
+        const el = document.getElementById("hours-rows");
+        el.innerHTML = DAYS.map(d => {
+            const openRaw = hours[`${d.key}Open`];
+            const closeRaw = hours[`${d.key}Close`];
+            const isOpen = !!openRaw && openRaw.slice(0, 5) !== "00:00";
+            const openVal = isOpen ? openRaw.slice(0, 5) : "12:00";
+            const closeVal = isOpen && closeRaw ? closeRaw.slice(0, 5) : "21:00";
+            return `
+                <div class="hours-row ${isOpen ? "" : "is-closed"}" data-day="${d.key}">
+                    <span class="hours-day">${d.label}</span>
+                    <label class="hours-open-toggle"><input type="checkbox" class="hours-open-check" ${isOpen ? "checked" : ""}> Open</label>
+                    <input type="time" class="hours-open-time" value="${openVal}" ${isOpen ? "" : "disabled"}>
+                    <span>–</span>
+                    <input type="time" class="hours-close-time" value="${closeVal}" ${isOpen ? "" : "disabled"}>
+                </div>
+            `;
+        }).join("");
+
+        el.querySelectorAll(".hours-row").forEach(row => {
+            const checkbox = row.querySelector(".hours-open-check");
+            const openTime = row.querySelector(".hours-open-time");
+            const closeTime = row.querySelector(".hours-close-time");
+            checkbox.addEventListener("change", () => {
+                row.classList.toggle("is-closed", !checkbox.checked);
+                openTime.disabled = closeTime.disabled = !checkbox.checked;
+            });
+        });
+    }
+
     async function loadProfile() {
+        document.getElementById("password-email-display").textContent = session.email || "your account email";
+
         try {
             const summary = await HW.apiJson(`/api/breweries/${breweryId}/dashboard-summary`);
             document.getElementById("brewery-name").value = summary.breweryName || "";
@@ -592,6 +636,7 @@ if (session) {
         } catch (err) {
             existingHours = {};
         }
+        renderHoursRows(existingHours);
 
         try {
             const res = await HW.apiFetch(`/api/breweryprofile/${breweryId}`);
@@ -603,11 +648,37 @@ if (session) {
                 document.getElementById("facebook-url").value = p.facebookUrl || "";
                 document.getElementById("instagram-url").value = p.instagramUrl || "";
                 document.getElementById("food-type").value = p.foodType || "";
+                document.getElementById("beer-menu-url").value = p.beerMenuUrl || "";
+                document.getElementById("food-menu-url").value = p.foodMenuUrl || "";
             }
         } catch (err) {
             console.error(err);
         }
     }
+
+    document.getElementById("hours-save-btn").addEventListener("click", async () => {
+        const alertEl = document.getElementById("profile-alert");
+        HW.hideAlert(alertEl);
+        const payload = {};
+        DAYS.forEach(d => {
+            const row = document.querySelector(`#hours-rows .hours-row[data-day="${d.key}"]`);
+            const open = row.querySelector(".hours-open-check").checked;
+            const openVal = open ? row.querySelector(".hours-open-time").value : "00:00";
+            const closeVal = open ? row.querySelector(".hours-close-time").value : "00:00";
+            payload[`${d.key}Open`] = `${openVal}:00`;
+            payload[`${d.key}Close`] = `${closeVal}:00`;
+        });
+        try {
+            await HW.apiJson(`/api/breweries/${breweryId}/hours`, {
+                method: "PUT",
+                body: JSON.stringify(payload)
+            });
+            existingHours = payload;
+            HW.showAlert(alertEl, "Hours saved.", "success");
+        } catch (err) {
+            HW.showAlert(alertEl, err.message);
+        }
+    });
 
     document.getElementById("brewery-info-form").addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -645,8 +716,8 @@ if (session) {
                     websiteUrl: document.getElementById("website-url").value.trim() || null,
                     facebookUrl: document.getElementById("facebook-url").value.trim() || null,
                     instagramUrl: document.getElementById("instagram-url").value.trim() || null,
-                    beermenuUrl: null,
-                    foodMenuUrl: null,
+                    beermenuUrl: document.getElementById("beer-menu-url").value.trim() || null,
+                    foodMenuUrl: document.getElementById("food-menu-url").value.trim() || null,
                     foodType: document.getElementById("food-type").value.trim() || null,
                     mondayOpen: existingHours.mondayOpen ?? null,
                     mondayClose: existingHours.mondayClose ?? null,
@@ -667,6 +738,68 @@ if (session) {
             HW.showAlert(alertEl, "Contact info saved.", "success");
         } catch (err) {
             HW.showAlert(alertEl, err.message);
+        }
+    });
+
+    // ── CHANGE PASSWORD ──────────────────────────────────────────────────────
+    // Same two-step code flow as forgot-password.html (there's no "verify
+    // current password" endpoint to build an inline change-password form
+    // against) — embedded here so a logged-in owner doesn't have to log out
+    // to use it. Sends the code to session.email (the login email), not the
+    // "Owner email" contact-info field above, which is a separate value the
+    // reset endpoint doesn't look up accounts by.
+    const passwordRequestForm = document.getElementById("password-request-form");
+    const passwordResetForm = document.getElementById("password-reset-form");
+
+    passwordRequestForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const alertEl = document.getElementById("password-alert");
+        HW.hideAlert(alertEl);
+        const btn = document.getElementById("password-request-btn");
+        btn.disabled = true;
+        btn.textContent = "Sending…";
+        try {
+            await HW.apiJson(`/api/password/request-reset`, {
+                method: "POST",
+                body: JSON.stringify({ email: session.email })
+            });
+            passwordRequestForm.style.display = "none";
+            document.getElementById("password-step1-sub").textContent = `If ${session.email} is registered, a reset code is on its way.`;
+            passwordResetForm.style.display = "block";
+        } catch (err) {
+            HW.showAlert(alertEl, err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Send Reset Code";
+        }
+    });
+
+    passwordResetForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const alertEl = document.getElementById("password-alert");
+        HW.hideAlert(alertEl);
+        const btn = document.getElementById("password-reset-btn");
+        btn.disabled = true;
+        btn.textContent = "Updating…";
+        try {
+            await HW.apiJson(`/api/password/reset`, {
+                method: "POST",
+                body: JSON.stringify({
+                    email: session.email,
+                    code: document.getElementById("password-code").value.trim(),
+                    newPassword: document.getElementById("password-new").value
+                })
+            });
+            passwordResetForm.reset();
+            passwordResetForm.style.display = "none";
+            passwordRequestForm.style.display = "block";
+            document.getElementById("password-step1-sub").textContent = "Send a reset code to your account email to update your password.";
+            HW.showAlert(alertEl, "Password updated.", "success");
+        } catch (err) {
+            HW.showAlert(alertEl, err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Update Password";
         }
     });
 
