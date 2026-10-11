@@ -69,6 +69,14 @@ if (session) {
         return `<div class="day-chip icon-${variant}"><span class="mon">${mon}</span><span class="day">${d.getDate()}</span></div>`;
     }
 
+    function setTrendChip(id, delta, suffix) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const sign = delta > 0 ? "+" : "";
+        el.textContent = `${sign}${delta} ${suffix}`;
+        el.className = "trend-chip " + (delta > 0 ? "up" : delta < 0 ? "down" : "flat");
+    }
+
     // ── OVERVIEW ─────────────────────────────────────────────────────────────
     function timeOfDayGreeting() {
         const hour = new Date().getHours();
@@ -97,21 +105,51 @@ if (session) {
         }
 
         try {
-            const events = await HW.apiJson(`/api/breweries/${breweryId}/events?userId=0&window=upcoming`);
+            // window=all (not just "upcoming") so the next-7-days trend below
+            // can compare against the 7 days before today, too.
+            const events = await HW.apiJson(`/api/breweries/${breweryId}/events?userId=0&window=all`);
+            const now = new Date();
+            const upcoming = events
+                .filter(ev => new Date(ev.endAt || ev.startAt) >= now)
+                .sort((a, b) => new Date(a.startAt) - new Date(b.startAt));
+
             const el = document.getElementById("overview-upcoming");
-            if (!events.length) {
-                el.innerHTML = `<div class="empty-state">No upcoming events yet — add one from the Events tab.</div>`;
-                return;
-            }
-            el.innerHTML = events.slice(0, 5).map(ev => `
-                <div class="item-row">
-                    ${dayChipHtml(ev.startAt, "blue")}
-                    <div class="item-info">
-                        <div class="item-title">${escapeHtml(ev.title)}</div>
-                        <div class="item-meta">${formatDateTimeRange(ev.startAt, ev.endAt)}</div>
+            el.innerHTML = upcoming.length
+                ? upcoming.slice(0, 5).map(ev => `
+                    <div class="item-row">
+                        ${dayChipHtml(ev.startAt, "blue")}
+                        <div class="item-info">
+                            <div class="item-title">${escapeHtml(ev.title)}</div>
+                            <div class="item-meta">${formatDateTimeRange(ev.startAt, ev.endAt)}</div>
+                        </div>
                     </div>
-                </div>
-            `).join("");
+                `).join("")
+                : `<div class="empty-state">No upcoming events yet — add one from the Events tab.</div>`;
+
+            const in7 = new Date(now.getTime() + 7 * 86400000);
+            const prev7 = new Date(now.getTime() - 7 * 86400000);
+            const nextWeekCount = events.filter(ev => { const s = new Date(ev.startAt); return s >= now && s < in7; }).length;
+            const lastWeekCount = events.filter(ev => { const s = new Date(ev.startAt); return s >= prev7 && s < now; }).length;
+            setTrendChip("stat-upcoming-trend", nextWeekCount - lastWeekCount, "vs last 7 days");
+        } catch (err) {
+            console.error(err);
+        }
+
+        try {
+            const [checkinsNow, checkinsPrev] = await Promise.all([
+                HW.apiJson(`/api/breweries/${breweryId}/analytics/checkins?weekOffset=0`),
+                HW.apiJson(`/api/breweries/${breweryId}/analytics/checkins?weekOffset=1`)
+            ]);
+            const thisWeek = (checkinsNow.perWeekdaySelectedWeek || []).reduce((a, b) => a + b, 0);
+            const lastWeek = (checkinsPrev.perWeekdaySelectedWeek || []).reduce((a, b) => a + b, 0);
+            setTrendChip("stat-checkins-trend", thisWeek - lastWeek, "vs last week");
+        } catch (err) {
+            console.error(err);
+        }
+
+        try {
+            const followers = await HW.apiJson(`/api/breweries/${breweryId}/analytics/followers`);
+            setTrendChip("stat-followers-trend", followers.thisWeekNet, "this week");
         } catch (err) {
             console.error(err);
         }
@@ -134,6 +172,63 @@ if (session) {
     }
 
     eventCancelBtn.addEventListener("click", resetEventForm);
+
+    // ── EVENTS: month/week calendar strip ───────────────────────────────────
+    // Purely a glance widget (which days this week/month have something on) —
+    // navigating it doesn't filter the Upcoming/Past lists below, it just
+    // moves which week is shown in the strip. Events are already loaded in
+    // full (window=all) by loadEvents, so no extra API calls are needed here.
+    let calendarAnchor = new Date();
+    let allEventsCache = [];
+
+    function startOfWeek(d) {
+        const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        copy.setDate(copy.getDate() - copy.getDay());
+        return copy;
+    }
+
+    function renderCalendarStrip() {
+        const weekStart = startOfWeek(calendarAnchor);
+        const days = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(weekStart);
+            d.setDate(d.getDate() + i);
+            return d;
+        });
+        document.getElementById("cal-month-label").textContent =
+            days[3].toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+        const todayKey = new Date().toDateString();
+        const eventDateKeys = new Set(allEventsCache.map(ev => new Date(ev.startAt).toDateString()));
+
+        document.getElementById("cal-week-strip").innerHTML = days.map(d => {
+            const key = d.toDateString();
+            const hasEvent = eventDateKeys.has(key);
+            return `
+                <div class="week-cell${hasEvent ? " has-event" : ""}${key === todayKey ? " is-today" : ""}">
+                    <div class="dow">${d.toLocaleDateString(undefined, { weekday: "short" })}</div>
+                    <div class="dnum">${d.getDate()}</div>
+                    ${hasEvent ? `<div class="dot"></div>` : ""}
+                </div>
+            `;
+        }).join("");
+    }
+
+    document.getElementById("cal-week-prev").addEventListener("click", () => {
+        calendarAnchor = new Date(calendarAnchor.getTime() - 7 * 86400000);
+        renderCalendarStrip();
+    });
+    document.getElementById("cal-week-next").addEventListener("click", () => {
+        calendarAnchor = new Date(calendarAnchor.getTime() + 7 * 86400000);
+        renderCalendarStrip();
+    });
+    document.getElementById("cal-month-prev").addEventListener("click", () => {
+        calendarAnchor = new Date(calendarAnchor.getFullYear(), calendarAnchor.getMonth() - 1, 1);
+        renderCalendarStrip();
+    });
+    document.getElementById("cal-month-next").addEventListener("click", () => {
+        calendarAnchor = new Date(calendarAnchor.getFullYear(), calendarAnchor.getMonth() + 1, 1);
+        renderCalendarStrip();
+    });
 
     function renderEventRow(ev, isPast) {
         const actions = isPast
@@ -277,6 +372,8 @@ if (session) {
     async function loadEvents() {
         try {
             const events = await HW.apiJson(`/api/breweries/${breweryId}/events?userId=0&window=all`);
+            allEventsCache = events;
+            renderCalendarStrip();
             const now = new Date();
 
             const upcoming = events
@@ -348,13 +445,12 @@ if (session) {
     const specialsAlert = document.getElementById("specials-alert");
 
     function renderSpecialRow(s) {
+        const isToday = new Date(s.date).getTime() === new Date(new Date().toDateString()).getTime();
         return `
-            <div class="item-row" data-id="${s.id}">
-                ${dayChipHtml(s.date, "amber")}
-                <div class="item-info">
-                    <div class="item-title">${escapeHtml(s.message)}</div>
-                    <div class="item-meta">${formatDate(s.date)}</div>
-                </div>
+            <div class="ticket-card${isToday ? " is-today" : ""}" data-id="${s.id}">
+                ${isToday ? `<div class="ribbon">Today</div>` : ""}
+                <div class="offer">${escapeHtml(s.message)}</div>
+                <div class="date">${formatDate(s.date)}</div>
                 <div class="item-actions">
                     <button class="btn-pill danger" data-action="delete">Delete</button>
                 </div>
@@ -472,6 +568,18 @@ if (session) {
 
     releaseCancelBtn.addEventListener("click", resetReleaseForm);
 
+    // Loose keyword mapping from beer style text to a tap-list swatch color —
+    // decorative only, falls back to the brand accent for anything unmatched.
+    function beerSwatchColor(styleText) {
+        const s = (styleText || "").toLowerCase();
+        if (/stout|porter/.test(s)) return "#4a2c17";
+        if (/lager|pilsner|helles|bock/.test(s)) return "#f3d27a";
+        if (/red|amber|irish/.test(s)) return "#c9542e";
+        if (/sour|fruit|gose|berliner/.test(s)) return "#d174b0";
+        if (/ipa|pale|wheat|saison|wit|hazy|neipa/.test(s)) return "#e8a13c";
+        return "var(--accent)";
+    }
+
     async function loadReleases() {
         try {
             const releases = await HW.apiJson(`/api/breweries/${breweryId}/beer-releases`);
@@ -480,21 +588,33 @@ if (session) {
                 el.innerHTML = `<div class="empty-state">Nothing brewing yet — post your first release above.</div>`;
                 return;
             }
-            el.innerHTML = releases.map(r => `
-                <div class="item-row" data-id="${r.id}">
-                    ${dayChipHtml(r.releaseDate, "green")}
-                    <div class="item-info">
-                        <div class="item-title">${escapeHtml(r.beerName)}${r.beerStyle ? ` — ${escapeHtml(r.beerStyle)}` : ""}</div>
-                        <div class="item-meta">${formatDate(r.releaseDate)}${r.abv ? ` · ${r.abv}% ABV` : ""}</div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-pill outline small" data-action="edit">Edit</button>
-                        <button class="btn-pill danger" data-action="delete">Delete</button>
+            el.innerHTML = releases.map(r => {
+                const isNew = Math.abs(new Date(r.releaseDate) - new Date()) <= 14 * 86400000;
+                return `
+                <div class="beer-card" data-id="${r.id}">
+                    <div class="swatch" style="background:${beerSwatchColor(r.beerStyle)};"></div>
+                    <div class="body">
+                        <div class="top-row">
+                            <div>
+                                <div class="name">${escapeHtml(r.beerName)}</div>
+                                ${r.beerStyle ? `<div class="style">${escapeHtml(r.beerStyle)}</div>` : ""}
+                            </div>
+                            ${isNew ? `<span class="beer-chip new">New</span>` : ""}
+                        </div>
+                        <div class="meta-row">
+                            ${r.abv ? `<span class="beer-chip abv">${r.abv}% ABV</span>` : ""}
+                            <span class="beer-chip abv">${formatDate(r.releaseDate)}</span>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn-pill outline small" data-action="edit">Edit</button>
+                            <button class="btn-pill danger" data-action="delete">Delete</button>
+                        </div>
                     </div>
                 </div>
-            `).join("");
+            `;
+            }).join("");
 
-            el.querySelectorAll(".item-row").forEach(row => {
+            el.querySelectorAll(".beer-card").forEach(row => {
                 const id = row.dataset.id;
                 const r = releases.find(x => String(x.id) === id);
                 row.querySelector('[data-action="edit"]').addEventListener("click", () => {
