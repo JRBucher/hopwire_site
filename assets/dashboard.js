@@ -347,40 +347,88 @@ if (session) {
     const specialForm = document.getElementById("special-form");
     const specialsAlert = document.getElementById("specials-alert");
 
+    function renderSpecialRow(s) {
+        return `
+            <div class="item-row" data-id="${s.id}">
+                ${dayChipHtml(s.date, "amber")}
+                <div class="item-info">
+                    <div class="item-title">${escapeHtml(s.message)}</div>
+                    <div class="item-meta">${formatDate(s.date)}</div>
+                </div>
+                <div class="item-actions">
+                    <button class="btn-pill danger" data-action="delete">Delete</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function wireSpecialRow(row) {
+        const id = row.dataset.id;
+        row.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+            if (!confirm("Delete this special?")) return;
+            try {
+                await HW.apiJson(`/api/specials/${id}`, { method: "DELETE" });
+                loadSpecials();
+            } catch (err) {
+                HW.showAlert(specialsAlert, err.message);
+            }
+        });
+    }
+
+    // Same "repeats" situation as events — one row per occurrence comes back
+    // from the API with no shared series id, so group same-message specials
+    // into one expandable row instead of listing every date flat.
+    function groupSpecialsByMessage(list) {
+        const groups = [];
+        const index = new Map();
+        for (const s of list) {
+            const key = (s.message || "").trim().toLowerCase();
+            if (index.has(key)) {
+                groups[index.get(key)].items.push(s);
+            } else {
+                index.set(key, groups.length);
+                groups.push({ message: s.message, items: [s] });
+            }
+        }
+        return groups;
+    }
+
+    function renderSpecialGroup(group) {
+        if (group.items.length === 1) {
+            return renderSpecialRow(group.items[0]);
+        }
+        const first = group.items[0];
+        return `
+            <div class="series-group">
+                <button type="button" class="series-header" aria-expanded="false">
+                    <span class="series-icon">↻</span>
+                    <span class="series-info">
+                        <span class="series-title">${escapeHtml(group.message)}</span>
+                        <span class="series-meta">${group.items.length} upcoming · next ${formatDate(first.date)}</span>
+                    </span>
+                    <span class="series-chevron">⌄</span>
+                </button>
+                <div class="series-body" hidden>
+                    ${group.items.map(s => renderSpecialRow(s)).join("")}
+                </div>
+            </div>
+        `;
+    }
+
     async function loadSpecials() {
         try {
             const specials = await HW.apiJson(`/api/breweries/${breweryId}/specials`);
             const el = document.getElementById("specials-list");
-            const upcoming = specials.filter(s => new Date(s.date) >= new Date(new Date().toDateString()));
+            const upcoming = specials
+                .filter(s => new Date(s.date) >= new Date(new Date().toDateString()))
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
             if (!upcoming.length) {
                 el.innerHTML = `<div class="empty-state">No specials on deck — line one up above.</div>`;
                 return;
             }
-            el.innerHTML = upcoming.slice(0, 30).map(s => `
-                <div class="item-row" data-id="${s.id}">
-                    ${dayChipHtml(s.date, "amber")}
-                    <div class="item-info">
-                        <div class="item-title">${escapeHtml(s.message)}</div>
-                        <div class="item-meta">${formatDate(s.date)}</div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-pill danger" data-action="delete">Delete</button>
-                    </div>
-                </div>
-            `).join("");
-
-            el.querySelectorAll(".item-row").forEach(row => {
-                const id = row.dataset.id;
-                row.querySelector('[data-action="delete"]').addEventListener("click", async () => {
-                    if (!confirm("Delete this special?")) return;
-                    try {
-                        await HW.apiJson(`/api/specials/${id}`, { method: "DELETE" });
-                        loadSpecials();
-                    } catch (err) {
-                        HW.showAlert(specialsAlert, err.message);
-                    }
-                });
-            });
+            el.innerHTML = groupSpecialsByMessage(upcoming).slice(0, 40).map(g => renderSpecialGroup(g)).join("");
+            el.querySelectorAll(".item-row").forEach(row => wireSpecialRow(row));
+            wireSeriesToggles(el);
         } catch (err) {
             HW.showAlert(specialsAlert, err.message);
         }
