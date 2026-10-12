@@ -283,9 +283,14 @@
                     <div class="card span-6">
                         <div class="section-card-head">
                             <div class="section-icon icon-amber">R</div>
-                            <div><h2>Latest Reviews</h2><p class="section-sub">Last 30 days.</p></div>
+                            <div><h2>Latest Reviews</h2><p class="section-sub">Scroll sideways for more.</p></div>
+                            <div class="reviews-range-toggle">
+                                <button type="button" class="calendar-nav-btn" id="reviews-range-prev" aria-label="Previous range">‹</button>
+                                <span class="range-label" id="reviews-range-label">Last 30 Days</span>
+                                <button type="button" class="calendar-nav-btn" id="reviews-range-next" aria-label="Next range">›</button>
+                            </div>
                         </div>
-                        <div id="analytics-reviews"></div>
+                        <div class="review-scroll" id="analytics-reviews"></div>
                     </div>
 
                     <!-- Check-in loyalty -->
@@ -340,10 +345,12 @@
                                 <button data-week="1">1 wk ago</button>
                                 <button data-week="2">2 wks ago</button>
                                 <button data-week="3">3 wks ago</button>
+                                <button data-week="ytd">YTD</button>
                             </div>
                         </div>
                         <div class="mini-grid" id="analytics-guest-stay" style="margin-bottom:12px;"></div>
                         <div class="weekday-chart c-green" id="analytics-guest-stay-chart"></div>
+                        <p class="section-sub" id="analytics-guest-stay-ytd-note" style="display:none;">Day-by-day breakdown isn't available for year-to-date — pick a week above to see it.</p>
                     </div>
 
                     <!-- Out-of-town guests -->

@@ -566,9 +566,31 @@ body.dash-body {
 .ring-legend-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.84rem; }
 .ring-legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0; }
 
-/* Reviews list */
-.review-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
-.review-item:last-child { border-bottom: none; }
+/* Reviews — horizontal scroll row of cards instead of a stacked list, with
+   a Last-30-Days / Year-to-Date range toggle in the card header. */
+.reviews-range-toggle { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.range-label { font-size: 0.8rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+
+.review-scroll {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+}
+.review-item {
+    scroll-snap-align: start;
+    flex: 0 0 230px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+}
+.review-top { display: flex; align-items: center; gap: 10px; }
 .review-rating-badge {
     flex: 0 0 38px; width: 38px; height: 38px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -577,10 +599,9 @@ body.dash-body {
 .review-rating-badge.r5, .review-rating-badge.r4 { background: var(--chart-green); }
 .review-rating-badge.r3 { background: var(--amber); }
 .review-rating-badge.r2, .review-rating-badge.r1 { background: var(--danger); }
-.review-body { flex: 1; min-width: 0; }
 .review-item .stars { color: var(--amber); font-weight: 700; font-size: 0.82rem; }
-.review-item .msg { font-size: 0.9rem; margin-top: 4px; }
-.review-item .when { color: var(--muted); font-size: 0.78rem; margin-top: 4px; }
+.review-item .msg { font-size: 0.88rem; line-height: 1.45; flex: 1; }
+.review-item .when { color: var(--muted); font-size: 0.78rem; padding-top: 10px; border-top: 1px dashed var(--line); }
 
 .rank-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
 .rank-list { display: flex; flex-direction: column; gap: 8px; }

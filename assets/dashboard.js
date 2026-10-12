@@ -1075,17 +1075,37 @@ if (session) {
         });
     });
 
+    let guestStayIsYtd = false;
+
     async function renderGuestStay() {
         try {
+            // ytdAvgMinutes comes back on every call regardless of weekOffset —
+            // the YTD toggle just changes which fields this renders, not the
+            // request made.
             const gs = await HW.apiJson(`/api/breweries/${breweryId}/analytics/guest-stay?weekOffset=${guestStayWeekOffset}`);
-            document.getElementById("analytics-guest-stay").innerHTML = [
-                miniStatHtml("Monthly avg", gs.monthlyAvgMinutes != null ? `${Math.round(gs.monthlyAvgMinutes)} min` : "—"),
-                miniStatHtml("Selected week avg", gs.weeklyAvgMinutes != null ? `${Math.round(gs.weeklyAvgMinutes)} min` : "—")
-            ].join("");
-            renderWeekdayChart(
-                document.getElementById("analytics-guest-stay-chart"),
-                (gs.perWeekdayAvgMinutes || [0, 0, 0, 0, 0, 0, 0]).map(v => Math.round(v))
-            );
+            document.getElementById("analytics-guest-stay").innerHTML = guestStayIsYtd
+                ? [
+                    miniStatHtml("Monthly avg", gs.monthlyAvgMinutes != null ? `${Math.round(gs.monthlyAvgMinutes)} min` : "—"),
+                    miniStatHtml("Year to date avg", gs.ytdAvgMinutes != null ? `${Math.round(gs.ytdAvgMinutes)} min` : "—")
+                ].join("")
+                : [
+                    miniStatHtml("Monthly avg", gs.monthlyAvgMinutes != null ? `${Math.round(gs.monthlyAvgMinutes)} min` : "—"),
+                    miniStatHtml("Selected week avg", gs.weeklyAvgMinutes != null ? `${Math.round(gs.weeklyAvgMinutes)} min` : "—")
+                ].join("");
+
+            const chartEl = document.getElementById("analytics-guest-stay-chart");
+            const noteEl = document.getElementById("analytics-guest-stay-ytd-note");
+            if (guestStayIsYtd) {
+                chartEl.style.display = "none";
+                noteEl.style.display = "block";
+            } else {
+                chartEl.style.display = "";
+                noteEl.style.display = "none";
+                renderWeekdayChart(
+                    chartEl,
+                    (gs.perWeekdayAvgMinutes || [0, 0, 0, 0, 0, 0, 0]).map(v => Math.round(v))
+                );
+            }
         } catch (err) {
             HW.showAlert(document.getElementById("analytics-alert"), err.message);
         }
@@ -1095,8 +1115,73 @@ if (session) {
         btn.addEventListener("click", () => {
             document.querySelectorAll("#guest-stay-weeks button").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
-            guestStayWeekOffset = parseInt(btn.dataset.week, 10);
+            guestStayIsYtd = btn.dataset.week === "ytd";
+            if (!guestStayIsYtd) guestStayWeekOffset = parseInt(btn.dataset.week, 10);
             renderGuestStay();
+        });
+    });
+
+    // Reviews range toggle (Last 30 Days / Year to Date) — split out of the
+    // big analytics Promise.all below so flipping it only refetches ratings,
+    // not followers/loyalty/events/out-of-town too.
+    let reviewsYtd = false;
+
+    async function loadRatings() {
+        const alertEl = document.getElementById("analytics-alert");
+        try {
+            const ratings = await HW.apiJson(`/api/breweries/${breweryId}/analytics/ratings?ytd=${reviewsYtd}`);
+            const avg = ratings.lifetimeAvgRating;
+            const pct = avg != null ? Math.round((avg / 5) * 100) : null;
+            let mood = "No ratings yet", moodClass = "flat";
+            if (pct != null) {
+                if (pct >= 90) { mood = "Superb!"; moodClass = "up"; }
+                else if (pct >= 75) { mood = "Great!"; moodClass = "up"; }
+                else if (pct >= 60) { mood = "Good"; moodClass = "flat"; }
+                else { mood = "Needs attention"; moodClass = "down"; }
+            }
+            document.getElementById("analytics-ratings-sentiment").innerHTML = `
+                <div class="sentiment-ring ${moodClass}" style="--pct:${pct ?? 0}">
+                    <div class="sentiment-pct">${pct != null ? pct + "%" : "—"}</div>
+                </div>
+                <div class="sentiment-mood">${escapeHtml(mood)}</div>
+                <div class="sentiment-stars">${avg != null ? starString(avg) : ""}</div>
+            `;
+            document.getElementById("analytics-ratings-summary").innerHTML = [
+                miniStatHtml("Avg rating", avg != null ? avg.toFixed(1) : "—"),
+                miniStatHtml("Reviews", ratings.lifetimeCount)
+            ].join("");
+            const reviewsEl = document.getElementById("analytics-reviews");
+            if (!ratings.reviews || !ratings.reviews.length) {
+                reviewsEl.innerHTML = `<div class="empty-state">No reviews ${reviewsYtd ? "yet this year" : "in the last 30 days"}.</div>`;
+            } else {
+                reviewsEl.innerHTML = ratings.reviews.map(r => {
+                    const n = Math.max(1, Math.min(5, Math.round(r.stars)));
+                    return `
+                        <div class="review-item">
+                            <div class="review-top">
+                                <div class="review-rating-badge r${n}">${n}★</div>
+                                <div class="stars">${starString(r.stars)}</div>
+                            </div>
+                            ${r.message ? `<div class="msg">${escapeHtml(r.message)}</div>` : ""}
+                            <div class="when">${formatDate(r.createdAt)}</div>
+                        </div>
+                    `;
+                }).join("");
+            }
+        } catch (err) {
+            HW.showAlert(alertEl, err.message);
+        }
+    }
+
+    function updateReviewsRangeLabel() {
+        document.getElementById("reviews-range-label").textContent = reviewsYtd ? "Year to Date" : "Last 30 Days";
+    }
+
+    ["reviews-range-prev", "reviews-range-next"].forEach(id => {
+        document.getElementById(id).addEventListener("click", () => {
+            reviewsYtd = !reviewsYtd;
+            updateReviewsRangeLabel();
+            loadRatings();
         });
     });
 
@@ -1104,15 +1189,16 @@ if (session) {
         const alertEl = document.getElementById("analytics-alert");
         HW.hideAlert(alertEl);
 
-        const [followers, loyalty, ratings, events, outOfTown] = await Promise.all([
+        loadRatings();
+
+        const [followers, loyalty, events, outOfTown] = await Promise.all([
             HW.apiJson(`/api/breweries/${breweryId}/analytics/followers`).catch(() => null),
             HW.apiJson(`/api/breweries/${breweryId}/analytics/checkin-loyalty`).catch(() => null),
-            HW.apiJson(`/api/breweries/${breweryId}/analytics/ratings`).catch(() => null),
             HW.apiJson(`/api/breweries/${breweryId}/analytics/events`).catch(() => null),
             HW.apiJson(`/api/breweries/${breweryId}/analytics/out-of-town`).catch(() => null)
         ]);
 
-        if (!followers && !ratings && !events) {
+        if (!followers && !events) {
             HW.showAlert(alertEl, "Couldn't load analytics right now.");
         }
 
@@ -1137,47 +1223,6 @@ if (session) {
             ];
             const total = segs.reduce((sum, s) => sum + (s.value || 0), 0);
             document.getElementById("analytics-loyalty").innerHTML = ringChartHtml(segs, total, "Visitors");
-        }
-
-        if (ratings) {
-            const avg = ratings.lifetimeAvgRating;
-            const pct = avg != null ? Math.round((avg / 5) * 100) : null;
-            let mood = "No ratings yet", moodClass = "flat";
-            if (pct != null) {
-                if (pct >= 90) { mood = "Superb!"; moodClass = "up"; }
-                else if (pct >= 75) { mood = "Great!"; moodClass = "up"; }
-                else if (pct >= 60) { mood = "Good"; moodClass = "flat"; }
-                else { mood = "Needs attention"; moodClass = "down"; }
-            }
-            document.getElementById("analytics-ratings-sentiment").innerHTML = `
-                <div class="sentiment-ring ${moodClass}" style="--pct:${pct ?? 0}">
-                    <div class="sentiment-pct">${pct != null ? pct + "%" : "—"}</div>
-                </div>
-                <div class="sentiment-mood">${escapeHtml(mood)}</div>
-                <div class="sentiment-stars">${avg != null ? starString(avg) : ""}</div>
-            `;
-            document.getElementById("analytics-ratings-summary").innerHTML = [
-                miniStatHtml("Avg rating", avg != null ? avg.toFixed(1) : "—"),
-                miniStatHtml("Reviews", ratings.lifetimeCount)
-            ].join("");
-            const reviewsEl = document.getElementById("analytics-reviews");
-            if (!ratings.reviews || !ratings.reviews.length) {
-                reviewsEl.innerHTML = `<div class="empty-state">No reviews in the last 30 days.</div>`;
-            } else {
-                reviewsEl.innerHTML = ratings.reviews.map(r => {
-                    const n = Math.max(1, Math.min(5, Math.round(r.stars)));
-                    return `
-                        <div class="review-item">
-                            <div class="review-rating-badge r${n}">${n}★</div>
-                            <div class="review-body">
-                                <div class="stars">${starString(r.stars)}</div>
-                                ${r.message ? `<div class="msg">${escapeHtml(r.message)}</div>` : ""}
-                                <div class="when">${formatDate(r.createdAt)}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join("");
-            }
         }
 
         if (events) {
