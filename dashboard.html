@@ -464,6 +464,22 @@
                     </form>
                 </div>
 
+                <div class="card" style="margin-top:24px;" id="locations-card" hidden>
+                    <div class="section-card-head">
+                        <div class="section-icon icon-blue">L</div>
+                        <div><h2 style="font-size:1rem;">Locations</h2><p class="section-sub" id="locations-status-sub">—</p></div>
+                    </div>
+                    <div class="alert" id="locations-alert"></div>
+                    <form id="locations-form">
+                        <div class="field">
+                            <label for="locations-max">Total locations allowed</label>
+                            <input type="number" id="locations-max" min="1" step="1" required>
+                            <span class="hint">Raising this unlocks the "Add Location" menu in the sidebar so you can add another taproom under this account.</span>
+                        </div>
+                        <button type="submit" class="btn-pill primary small">Save</button>
+                    </form>
+                </div>
+
                 <div class="card" style="margin-top:24px;">
                     <div class="section-card-head">
                         <div class="section-icon icon-amber">P</div>

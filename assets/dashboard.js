@@ -1287,12 +1287,54 @@ if (session) {
     let lastCreatedEmail = "";
     let lastCreatedTempPass = "";
 
+    // Profile's "Locations" card — lets a parent account raise its own cap
+    // (no billing, just the max_locations field) so a single-location account
+    // can grow into one that's allowed to use Add Location.
+    const locationsCard = document.getElementById("locations-card");
+    const locationsStatusSub = document.getElementById("locations-status-sub");
+    const locationsMaxInput = document.getElementById("locations-max");
+    const locationsForm = document.getElementById("locations-form");
+    const locationsAlert = document.getElementById("locations-alert");
+
     // Only parent accounts on a multi-location plan, under their cap, can add
     // a location — mirrors BreweryHomePage.xaml.cs's ApplyRoleVisibilityAsync;
-    // the server re-validates this on every call regardless.
-    HW.apiJson(`/api/breweries/${breweryId}/account-status`)
-        .then(status => { if (status.canAddLocations) addLocationBtn.style.display = "block"; })
-        .catch(err => console.error(err));
+    // the server re-validates this on every call regardless. Also drives the
+    // Profile "Locations" card: hidden entirely for a child (non-parent)
+    // account, since location management only makes sense for the primary.
+    function applyAccountStatus(status) {
+        addLocationBtn.style.display = status.canAddLocations ? "block" : "none";
+
+        locationsCard.hidden = !status.isParentAccount;
+        if (!status.isParentAccount) return;
+
+        const cap = status.maxLocations ?? 1;
+        locationsStatusSub.textContent = `Using ${status.ownedLocationCount} of ${cap} location${cap === 1 ? "" : "s"}.`;
+        locationsMaxInput.value = cap;
+        locationsMaxInput.min = status.ownedLocationCount || 1;
+    }
+
+    function refreshAccountStatus() {
+        return HW.apiJson(`/api/breweries/${breweryId}/account-status`)
+            .then(applyAccountStatus)
+            .catch(err => console.error(err));
+    }
+
+    refreshAccountStatus();
+
+    locationsForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        HW.hideAlert(locationsAlert);
+        try {
+            const status = await HW.apiJson(`/api/breweries/${breweryId}/max-locations`, {
+                method: "PUT",
+                body: JSON.stringify({ maxLocations: parseInt(locationsMaxInput.value, 10) })
+            });
+            applyAccountStatus(status);
+            HW.showAlert(locationsAlert, status.canAddLocations ? "Saved — Add Location is now available in the sidebar." : "Saved.", "success");
+        } catch (err) {
+            HW.showAlert(locationsAlert, err.message);
+        }
+    });
 
     function resetAddLocationForm() {
         pickedLocation = null;
