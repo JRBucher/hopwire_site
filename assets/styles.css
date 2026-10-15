@@ -188,10 +188,10 @@ body.dash-body {
        shell, not a marketing page, so there's nowhere it should navigate to. */
     cursor: default;
 }
-.dash-topbar .name { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.01em; }
+.dash-topbar .name { font-weight: 1000; font-size: 1.2rem; letter-spacing: -0.01em; }
 .dash-topbar .name .hop { color: #EDECF4; }
 .dash-topbar .name .wire { color: #B896FF; }
-.dash-topbar .tagline { color: #8b899c; font-size: 0.74rem; font-weight: 500; }
+.dash-topbar .tagline { color: #D9D8DF; font-size: 0.74rem; font-weight: 700; }
 .dash-shell { display: flex; flex: 1; min-height: 0; }
 .dash-sidebar {
     width: 220px;
