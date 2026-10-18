@@ -1491,6 +1491,24 @@ if (session) {
     const locationSwitcherCurrent = document.getElementById("location-switcher-current");
     const locationSwitcherMenu = document.getElementById("location-switcher-menu");
 
+    // Best-effort "City, State" out of a free-typed street address (there's no
+    // separate city/state column — see HopWire_API's breweries table). Most
+    // addresses are "street, city, state zip", so take the last two comma
+    // segments and strip digits off the state/zip one; anything that doesn't
+    // look like that shape just falls back to the full address rather than
+    // showing something wrong.
+    function cityStateFromAddress(address) {
+        if (!address) return "";
+        const parts = address.split(",").map(s => s.trim()).filter(Boolean);
+        if (parts.length >= 3) {
+            const city = parts[parts.length - 2];
+            const state = parts[parts.length - 1].replace(/\d+/g, "").trim();
+            return state ? `${city}, ${state}` : city;
+        }
+        if (parts.length === 2) return parts[1];
+        return address;
+    }
+
     async function refreshLocationSwitcher(status) {
         try {
             const locations = await HW.apiJson(`/api/breweries/${breweryId}/locations`);
@@ -1499,16 +1517,21 @@ if (session) {
             const breweryNicknameField = document.getElementById("brewery-nickname-field");
             if (breweryNicknameField) breweryNicknameField.style.display = isMultiLocation ? "flex" : "none";
 
-            if (!status.isParentAccount || !isMultiLocation) {
+            if (!status.canSwitchLocations || !isMultiLocation) {
                 locationSwitcher.style.display = "none";
                 return;
             }
 
-            locationSwitcherCurrent.textContent = session.nickname || session.breweryName || "Switch location";
+            const current = locations.find(loc => loc.breweryId === breweryId);
+            locationSwitcherCurrent.textContent = session.nickname
+                || (current && cityStateFromAddress(current.streetAddress))
+                || session.breweryName
+                || "Switch location";
+
             locationSwitcherMenu.innerHTML = locations.map(loc => `
                 <div class="location-switcher-item${loc.breweryId === breweryId ? " active" : ""}" data-id="${loc.breweryId}">
                     <div class="name">${escapeHtml(loc.breweryName)}</div>
-                    ${loc.locationNickname ? `<div class="nickname">${escapeHtml(loc.locationNickname)}</div>` : ""}
+                    <div class="nickname">${escapeHtml(loc.locationNickname || cityStateFromAddress(loc.streetAddress) || "—")}</div>
                 </div>
             `).join("");
             locationSwitcher.style.display = "block";
