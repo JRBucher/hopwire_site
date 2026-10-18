@@ -3,7 +3,7 @@
 // to login.html and leaves `session` null if there's no valid one.
 if (session) {
     const breweryId = session.breweryId;
-    document.getElementById("sidebar-brewery-name").textContent = session.breweryName || "Your brewery";
+    document.getElementById("topbar-tagline").textContent = session.breweryName ? `for ${session.breweryName}` : "for Brewery Owners";
 
     // ── NAV / VIEW SWITCHING ─────────────────────────────────────────────────
     const navItems = document.querySelectorAll(".dash-nav-item[data-view]");
@@ -105,15 +105,12 @@ if (session) {
             // not just when the owner bothered to name one.
             const locationLabel = nickname || cityFromAddress(summary.streetAddress) || "";
             document.getElementById("overview-heading").textContent = breweryName
-                ? `${timeOfDayGreeting()}, ${breweryName}${locationLabel ? ` {${locationLabel}}` : ""}`
+                ? `${timeOfDayGreeting()}, ${breweryName}${locationLabel ? ` - ${locationLabel}` : ""}`
                 : timeOfDayGreeting();
             document.getElementById("overview-subhead").textContent =
                 new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) +
                 " — here's what's pouring.";
-            document.getElementById("sidebar-brewery-name").textContent = breweryName;
-            const sidebarLocationTag = document.getElementById("sidebar-location-tag");
-            sidebarLocationTag.textContent = locationLabel;
-            sidebarLocationTag.style.display = locationLabel ? "" : "none";
+            document.getElementById("topbar-tagline").textContent = breweryName ? `for ${breweryName}` : "for Brewery Owners";
             session.nickname = nickname || null;
             HW.setSession(session);
             document.getElementById("stat-checkins").textContent = summary.weeklyCheckinCount ?? "0";
@@ -889,11 +886,7 @@ if (session) {
             session.breweryName = document.getElementById("brewery-name").value.trim();
             session.nickname = nickname || null;
             HW.setSession(session);
-            document.getElementById("sidebar-brewery-name").textContent = session.breweryName;
-            const locationLabel = nickname || cityFromAddress(streetAddress) || "";
-            const sidebarLocationTag = document.getElementById("sidebar-location-tag");
-            sidebarLocationTag.textContent = locationLabel;
-            sidebarLocationTag.style.display = locationLabel ? "" : "none";
+            document.getElementById("topbar-tagline").textContent = session.breweryName ? `for ${session.breweryName}` : "for Brewery Owners";
             HW.showAlert(alertEl, "Brewery info saved.", "success");
         } catch (err) {
             HW.showAlert(alertEl, err.message);

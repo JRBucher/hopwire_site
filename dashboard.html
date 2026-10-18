@@ -4,18 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=15">
+    <link rel="stylesheet" href="assets/styles.css?v=16">
 </head>
 <body class="dash-body">
     <div class="dash-topbar">
         <span class="name"><span class="hop">Hop</span><span class="wire">Wire</span></span>
-        <span class="tagline nav-text">for Brewery Owners</span>
+        <span class="tagline nav-text" id="topbar-tagline">for Brewery Owners</span>
     </div>
 
     <div class="dash-shell">
         <aside class="dash-sidebar">
-            <div class="brewery-name" id="sidebar-brewery-name">&nbsp;</div>
-            <div class="brewery-tagline" id="sidebar-location-tag" style="display:none;"></div>
             <div class="location-switcher" id="location-switcher" style="display:none;">
                 <button type="button" class="location-switcher-btn" id="location-switcher-btn">
                     <span id="location-switcher-current">Switch location</span><span class="chev">⌄</span>
@@ -397,7 +395,7 @@
                             <input type="tel" id="brewery-phone">
                         </div>
                         <div class="field" id="brewery-nickname-field" style="display:none;">
-                            <label for="brewery-nickname">Location nickname <span class="hint">(shown when switching between locations)</span></label>
+                            <label for="brewery-nickname">Location nickname <span class="hint">(optional — if left blank, your city is used instead)</span></label>
                             <input type="text" id="brewery-nickname" placeholder="e.g. Norfolk">
                         </div>
                         <button type="submit" class="btn-pill primary small">Save</button>
@@ -553,7 +551,7 @@
             </div>
 
             <div class="field">
-                <label for="new-location-nickname">Nickname <span class="hint">(optional — shown when switching between locations)</span></label>
+                <label for="new-location-nickname">Nickname <span class="hint">(optional — if left blank, the city from the address above is used instead)</span></label>
                 <input type="text" id="new-location-nickname" placeholder="e.g. Norfolk">
             </div>
 
@@ -583,6 +581,6 @@
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=13"></script>
+    <script src="assets/dashboard.js?v=14"></script>
 </body>
 </html>
