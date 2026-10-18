@@ -100,16 +100,20 @@ if (session) {
             const summary = await HW.apiJson(`/api/breweries/${breweryId}/dashboard-summary`);
             const breweryName = summary.breweryName || session.breweryName || "";
             const nickname = summary.locationNickname || "";
+            // Falls back to the city when no nickname is set, so it's always
+            // clear which location this dashboard session is posting to —
+            // not just when the owner bothered to name one.
+            const locationLabel = nickname || cityFromAddress(summary.streetAddress) || "";
             document.getElementById("overview-heading").textContent = breweryName
-                ? `${timeOfDayGreeting()}, ${breweryName}${nickname ? ` {${nickname}}` : ""}`
+                ? `${timeOfDayGreeting()}, ${breweryName}${locationLabel ? ` {${locationLabel}}` : ""}`
                 : timeOfDayGreeting();
             document.getElementById("overview-subhead").textContent =
                 new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) +
                 " — here's what's pouring.";
             document.getElementById("sidebar-brewery-name").textContent = breweryName;
             const sidebarLocationTag = document.getElementById("sidebar-location-tag");
-            sidebarLocationTag.textContent = nickname;
-            sidebarLocationTag.style.display = nickname ? "" : "none";
+            sidebarLocationTag.textContent = locationLabel;
+            sidebarLocationTag.style.display = locationLabel ? "" : "none";
             session.nickname = nickname || null;
             HW.setSession(session);
             document.getElementById("stat-checkins").textContent = summary.weeklyCheckinCount ?? "0";
@@ -871,12 +875,13 @@ if (session) {
         const alertEl = document.getElementById("profile-alert");
         HW.hideAlert(alertEl);
         const nickname = document.getElementById("brewery-nickname").value.trim();
+        const streetAddress = document.getElementById("brewery-address").value.trim();
         try {
             await HW.apiJson(`/api/breweries/${breweryId}`, {
                 method: "PUT",
                 body: JSON.stringify({
                     breweryName: document.getElementById("brewery-name").value.trim() || null,
-                    streetAddress: document.getElementById("brewery-address").value.trim() || null,
+                    streetAddress: streetAddress || null,
                     phoneNumber: document.getElementById("brewery-phone").value.trim() || null,
                     locationNickname: nickname
                 })
@@ -885,9 +890,10 @@ if (session) {
             session.nickname = nickname || null;
             HW.setSession(session);
             document.getElementById("sidebar-brewery-name").textContent = session.breweryName;
+            const locationLabel = nickname || cityFromAddress(streetAddress) || "";
             const sidebarLocationTag = document.getElementById("sidebar-location-tag");
-            sidebarLocationTag.textContent = nickname;
-            sidebarLocationTag.style.display = nickname ? "" : "none";
+            sidebarLocationTag.textContent = locationLabel;
+            sidebarLocationTag.style.display = locationLabel ? "" : "none";
             HW.showAlert(alertEl, "Brewery info saved.", "success");
         } catch (err) {
             HW.showAlert(alertEl, err.message);
@@ -1491,22 +1497,18 @@ if (session) {
     const locationSwitcherCurrent = document.getElementById("location-switcher-current");
     const locationSwitcherMenu = document.getElementById("location-switcher-menu");
 
-    // Best-effort "City, State" out of a free-typed street address (there's no
-    // separate city/state column — see HopWire_API's breweries table). Most
-    // addresses are "street, city, state zip", so take the last two comma
-    // segments and strip digits off the state/zip one; anything that doesn't
-    // look like that shape just falls back to the full address rather than
-    // showing something wrong.
-    function cityStateFromAddress(address) {
+    // Best-effort city out of a free-typed street address (there's no separate
+    // city/state column — see HopWire_API's breweries table). Addresses are
+    // typically "street, city, state zip[, country]" — drop a trailing
+    // country segment if present, then the city is second-to-last.
+    function cityFromAddress(address) {
         if (!address) return "";
-        const parts = address.split(",").map(s => s.trim()).filter(Boolean);
-        if (parts.length >= 3) {
-            const city = parts[parts.length - 2];
-            const state = parts[parts.length - 1].replace(/\d+/g, "").trim();
-            return state ? `${city}, ${state}` : city;
+        let parts = address.split(",").map(s => s.trim()).filter(Boolean);
+        if (parts.length && /^(usa|u\.s\.a\.?|united states)$/i.test(parts[parts.length - 1])) {
+            parts = parts.slice(0, -1);
         }
-        if (parts.length === 2) return parts[1];
-        return address;
+        if (parts.length >= 2) return parts[parts.length - 2];
+        return parts[0] || "";
     }
 
     async function refreshLocationSwitcher(status) {
@@ -1524,16 +1526,18 @@ if (session) {
 
             const current = locations.find(loc => loc.breweryId === breweryId);
             locationSwitcherCurrent.textContent = session.nickname
-                || (current && cityStateFromAddress(current.streetAddress))
+                || (current && cityFromAddress(current.streetAddress))
                 || session.breweryName
                 || "Switch location";
 
-            locationSwitcherMenu.innerHTML = locations.map(loc => `
-                <div class="location-switcher-item${loc.breweryId === breweryId ? " active" : ""}" data-id="${loc.breweryId}">
-                    <div class="name">${escapeHtml(loc.breweryName)}</div>
-                    <div class="nickname">${escapeHtml(loc.locationNickname || cityStateFromAddress(loc.streetAddress) || "—")}</div>
-                </div>
-            `).join("");
+            locationSwitcherMenu.innerHTML = locations.map(loc => {
+                const subtitle = loc.locationNickname || cityFromAddress(loc.streetAddress);
+                return `
+                    <div class="location-switcher-item${loc.breweryId === breweryId ? " active" : ""}" data-id="${loc.breweryId}">
+                        <span class="name">${escapeHtml(loc.breweryName)}</span>${subtitle ? `<span class="nickname"> — ${escapeHtml(subtitle)}</span>` : ""}
+                    </div>
+                `;
+            }).join("");
             locationSwitcher.style.display = "block";
         } catch (err) {
             console.error(err);
