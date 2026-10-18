@@ -51,6 +51,15 @@ if (session) {
         return `${startStr} – ${endStr}`;
     }
 
+    function formatTimeRange(startIso, endIso) {
+        const start = new Date(startIso);
+        const startStr = start.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+        if (!endIso) return startStr;
+        const end = new Date(endIso);
+        const endStr = end.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+        return `${startStr} – ${endStr}`;
+    }
+
     function toLocalDateTimeInputValue(iso) {
         // Server dates come back naive (no offset) — treat as literal wall-clock
         // time, no timezone conversion, so a stored "19:00" shows as "19:00".
@@ -90,13 +99,19 @@ if (session) {
         try {
             const summary = await HW.apiJson(`/api/breweries/${breweryId}/dashboard-summary`);
             const breweryName = summary.breweryName || session.breweryName || "";
+            const nickname = summary.locationNickname || "";
             document.getElementById("overview-heading").textContent = breweryName
-                ? `${timeOfDayGreeting()}, ${breweryName}`
+                ? `${timeOfDayGreeting()}, ${breweryName}${nickname ? ` {${nickname}}` : ""}`
                 : timeOfDayGreeting();
             document.getElementById("overview-subhead").textContent =
                 new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) +
                 " — here's what's pouring.";
             document.getElementById("sidebar-brewery-name").textContent = breweryName;
+            const sidebarLocationTag = document.getElementById("sidebar-location-tag");
+            sidebarLocationTag.textContent = nickname;
+            sidebarLocationTag.style.display = nickname ? "" : "none";
+            session.nickname = nickname || null;
+            HW.setSession(session);
             document.getElementById("stat-checkins").textContent = summary.weeklyCheckinCount ?? "0";
             document.getElementById("stat-followers").textContent = summary.followerCount ?? "0";
             document.getElementById("stat-upcoming").textContent = summary.upcomingEventCount ?? "0";
@@ -115,13 +130,11 @@ if (session) {
 
             const el = document.getElementById("overview-upcoming");
             el.innerHTML = upcoming.length
-                ? upcoming.slice(0, 5).map(ev => `
-                    <div class="item-row">
-                        ${dayChipHtml(ev.startAt, "blue")}
-                        <div class="item-info">
-                            <div class="item-title">${escapeHtml(ev.title)}</div>
-                            <div class="item-meta">${formatDateTimeRange(ev.startAt, ev.endAt)}</div>
-                        </div>
+                ? upcoming.slice(0, 6).map(ev => `
+                    <div class="next-up-card">
+                        <div class="date">${formatDate(ev.startAt)}</div>
+                        <div class="title">${escapeHtml(ev.title)}</div>
+                        <div class="meta">${formatTimeRange(ev.startAt, ev.endAt)}</div>
                     </div>
                 `).join("")
                 : `<div class="empty-state">No upcoming events yet — add one from the Events tab.</div>`;
@@ -784,6 +797,7 @@ if (session) {
             const summary = await HW.apiJson(`/api/breweries/${breweryId}/dashboard-summary`);
             document.getElementById("brewery-name").value = summary.breweryName || "";
             document.getElementById("brewery-address").value = summary.streetAddress || "";
+            document.getElementById("brewery-nickname").value = summary.locationNickname || "";
         } catch (err) {
             console.error(err);
         }
@@ -856,18 +870,24 @@ if (session) {
         e.preventDefault();
         const alertEl = document.getElementById("profile-alert");
         HW.hideAlert(alertEl);
+        const nickname = document.getElementById("brewery-nickname").value.trim();
         try {
             await HW.apiJson(`/api/breweries/${breweryId}`, {
                 method: "PUT",
                 body: JSON.stringify({
                     breweryName: document.getElementById("brewery-name").value.trim() || null,
                     streetAddress: document.getElementById("brewery-address").value.trim() || null,
-                    phoneNumber: document.getElementById("brewery-phone").value.trim() || null
+                    phoneNumber: document.getElementById("brewery-phone").value.trim() || null,
+                    locationNickname: nickname
                 })
             });
             session.breweryName = document.getElementById("brewery-name").value.trim();
+            session.nickname = nickname || null;
             HW.setSession(session);
             document.getElementById("sidebar-brewery-name").textContent = session.breweryName;
+            const sidebarLocationTag = document.getElementById("sidebar-location-tag");
+            sidebarLocationTag.textContent = nickname;
+            sidebarLocationTag.style.display = nickname ? "" : "none";
             HW.showAlert(alertEl, "Brewery info saved.", "success");
         } catch (err) {
             HW.showAlert(alertEl, err.message);
@@ -1282,6 +1302,7 @@ if (session) {
     const newLocationNameEl = document.getElementById("new-location-name");
     const newLocationAddressEl = document.getElementById("new-location-address");
     const newLocationEmailEl = document.getElementById("new-location-email");
+    const newLocationNicknameEl = document.getElementById("new-location-nickname");
     let pickedLocation = null;
     let locationSearchDebounce = null;
     let lastCreatedEmail = "";
@@ -1305,12 +1326,14 @@ if (session) {
         addLocationBtn.style.display = status.canAddLocations ? "block" : "none";
 
         locationsCard.hidden = !status.isParentAccount;
-        if (!status.isParentAccount) return;
+        if (status.isParentAccount) {
+            const cap = status.maxLocations ?? 1;
+            locationsStatusSub.textContent = `Using ${status.ownedLocationCount} of ${cap} location${cap === 1 ? "" : "s"}.`;
+            locationsMaxInput.value = cap;
+            locationsMaxInput.min = status.ownedLocationCount || 1;
+        }
 
-        const cap = status.maxLocations ?? 1;
-        locationsStatusSub.textContent = `Using ${status.ownedLocationCount} of ${cap} location${cap === 1 ? "" : "s"}.`;
-        locationsMaxInput.value = cap;
-        locationsMaxInput.min = status.ownedLocationCount || 1;
+        refreshLocationSwitcher(status);
     }
 
     function refreshAccountStatus() {
@@ -1343,6 +1366,7 @@ if (session) {
         newLocationNameEl.value = "";
         newLocationAddressEl.value = "";
         newLocationEmailEl.value = "";
+        newLocationNicknameEl.value = "";
         HW.hideAlert(addLocationAlert);
     }
 
@@ -1420,7 +1444,8 @@ if (session) {
                     email,
                     existingBreweryId: usingPicker ? pickedLocation.breweryId : null,
                     newBreweryName: usingPicker ? null : newName,
-                    newBreweryAddress: usingPicker ? null : newAddress
+                    newBreweryAddress: usingPicker ? null : newAddress,
+                    nickname: newLocationNicknameEl.value.trim() || null
                 })
             });
 
@@ -1453,6 +1478,77 @@ if (session) {
         addLocationOverlay.style.display = "none";
         lastCreatedEmail = "";
         lastCreatedTempPass = "";
+        refreshAccountStatus();
+    });
+
+    // ── LOCATION SWITCHER (sidebar — act as any of this account's locations) ─
+    // Only a parent account sees the dropdown (siblings can't switch between
+    // each other — see Authcontroller.SwitchLocation), but the nickname field
+    // on Profile is shown to any account that's part of a multi-location
+    // group, parent or child, since either one might want to label itself.
+    const locationSwitcher = document.getElementById("location-switcher");
+    const locationSwitcherBtn = document.getElementById("location-switcher-btn");
+    const locationSwitcherCurrent = document.getElementById("location-switcher-current");
+    const locationSwitcherMenu = document.getElementById("location-switcher-menu");
+
+    async function refreshLocationSwitcher(status) {
+        try {
+            const locations = await HW.apiJson(`/api/breweries/${breweryId}/locations`);
+            const isMultiLocation = Array.isArray(locations) && locations.length > 1;
+
+            const breweryNicknameField = document.getElementById("brewery-nickname-field");
+            if (breweryNicknameField) breweryNicknameField.style.display = isMultiLocation ? "flex" : "none";
+
+            if (!status.isParentAccount || !isMultiLocation) {
+                locationSwitcher.style.display = "none";
+                return;
+            }
+
+            locationSwitcherCurrent.textContent = session.nickname || session.breweryName || "Switch location";
+            locationSwitcherMenu.innerHTML = locations.map(loc => `
+                <div class="location-switcher-item${loc.breweryId === breweryId ? " active" : ""}" data-id="${loc.breweryId}">
+                    <div class="name">${escapeHtml(loc.breweryName)}</div>
+                    ${loc.locationNickname ? `<div class="nickname">${escapeHtml(loc.locationNickname)}</div>` : ""}
+                </div>
+            `).join("");
+            locationSwitcher.style.display = "block";
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    locationSwitcherBtn.addEventListener("click", () => {
+        locationSwitcherMenu.style.display = locationSwitcherMenu.style.display === "block" ? "none" : "block";
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!locationSwitcher.contains(e.target)) locationSwitcherMenu.style.display = "none";
+    });
+
+    locationSwitcherMenu.addEventListener("click", async (e) => {
+        const item = e.target.closest(".location-switcher-item");
+        if (!item) return;
+        locationSwitcherMenu.style.display = "none";
+        const targetId = parseInt(item.dataset.id, 10);
+        if (targetId === breweryId) return;
+
+        try {
+            const result = await HW.apiJson(`/api/auth/switch-location`, {
+                method: "POST",
+                body: JSON.stringify({ breweryId: targetId })
+            });
+            HW.setSession({
+                token: result.token,
+                breweryId: result.breweryId,
+                breweryName: result.breweryName,
+                nickname: result.locationNickname || null,
+                email: session.email,
+                role: session.role
+            });
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+        }
     });
 
     // Kick off with the overview tab.

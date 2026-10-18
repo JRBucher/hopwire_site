@@ -80,7 +80,8 @@
                     breweryId: body.id,
                     breweryName: body.fullName,
                     email: body.email,
-                    role: body.role
+                    role: body.role,
+                    nickname: body.locationNickname || null
                 });
 
                 window.location.href = "dashboard.html";

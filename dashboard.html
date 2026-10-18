@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=14">
+    <link rel="stylesheet" href="assets/styles.css?v=15">
 </head>
 <body class="dash-body">
     <div class="dash-topbar">
@@ -15,7 +15,13 @@
     <div class="dash-shell">
         <aside class="dash-sidebar">
             <div class="brewery-name" id="sidebar-brewery-name">&nbsp;</div>
-            <div class="brewery-tagline">Taproom Dashboard</div>
+            <div class="brewery-tagline" id="sidebar-location-tag" style="display:none;"></div>
+            <div class="location-switcher" id="location-switcher" style="display:none;">
+                <button type="button" class="location-switcher-btn" id="location-switcher-btn">
+                    <span id="location-switcher-current">Switch location</span><span class="chev">⌄</span>
+                </button>
+                <div class="location-switcher-menu" id="location-switcher-menu" style="display:none;"></div>
+            </div>
             <button class="dash-nav-item active" data-view="overview">Dashboard</button>
             <button class="dash-nav-item" data-view="events">Events</button>
             <button class="dash-nav-item" data-view="specials">Specials</button>
@@ -57,7 +63,7 @@
                     <div class="section-icon icon-green">N</div>
                     <div><h2 style="font-size:1.05rem;">Next up</h2><p class="section-sub">What's on the calendar this week.</p></div>
                 </div>
-                <div class="item-list timeline" id="overview-upcoming"></div>
+                <div class="next-up-grid" id="overview-upcoming"></div>
             </section>
 
             <!-- EVENTS -->
@@ -390,6 +396,10 @@
                             <label for="brewery-phone">Phone number</label>
                             <input type="tel" id="brewery-phone">
                         </div>
+                        <div class="field" id="brewery-nickname-field" style="display:none;">
+                            <label for="brewery-nickname">Location nickname <span class="hint">(shown when switching between locations)</span></label>
+                            <input type="text" id="brewery-nickname" placeholder="e.g. Norfolk">
+                        </div>
                         <button type="submit" class="btn-pill primary small">Save</button>
                     </form>
 
@@ -538,6 +548,11 @@
                 <input type="email" id="new-location-email" autocomplete="off">
             </div>
 
+            <div class="field">
+                <label for="new-location-nickname">Nickname <span class="hint">(optional — shown when switching between locations)</span></label>
+                <input type="text" id="new-location-nickname" placeholder="e.g. Norfolk">
+            </div>
+
             <div class="wizard-actions">
                 <button type="button" class="btn-pill outline" id="add-location-cancel">Cancel</button>
                 <button type="button" class="btn-pill primary" id="add-location-save">Add Location</button>
@@ -564,6 +579,6 @@
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=12"></script>
+    <script src="assets/dashboard.js?v=13"></script>
 </body>
 </html>

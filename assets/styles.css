@@ -216,8 +216,50 @@ body.dash-body {
     font-size: 0.72rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    padding: 0 12px 18px;
+    padding: 0 12px 6px;
 }
+.location-switcher { position: relative; padding: 0 12px 18px; }
+.location-switcher-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.location-switcher-btn:hover { background: rgba(255, 255, 255, 0.14); }
+.location-switcher-btn span#location-switcher-current {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.location-switcher-btn .chev { color: #b9b7c9; font-size: 0.75rem; flex-shrink: 0; }
+.location-switcher-menu {
+    position: absolute;
+    top: 100%;
+    left: 12px;
+    right: 12px;
+    margin-top: 4px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px -18px rgba(22, 22, 26, 0.5);
+    z-index: 20;
+    max-height: 260px;
+    overflow-y: auto;
+}
+.location-switcher-item { padding: 10px 14px; cursor: pointer; }
+.location-switcher-item:hover { background: var(--accent-soft); }
+.location-switcher-item.active { background: var(--accent-soft); }
+.location-switcher-item .name { font-size: 0.88rem; font-weight: 600; color: var(--ink); }
+.location-switcher-item .nickname { font-size: 0.76rem; color: var(--muted); margin-top: 1px; }
 .dash-nav-item {
     display: flex;
     align-items: center;
@@ -295,11 +337,28 @@ body.dash-body {
 .trend-chip.down { background: var(--danger-soft); color: var(--danger); }
 .trend-chip.flat { background: var(--line); color: var(--muted); }
 
-/* "Next up" timeline (Overview) — a connecting line behind the date chips */
-.timeline { position: relative; }
-.timeline::before { content: ""; position: absolute; left: 44px; top: 4px; bottom: 4px; width: 2px; background: var(--line); z-index: 0; }
-.timeline .item-row { position: relative; z-index: 1; }
-.timeline .item-row .day-chip { box-shadow: 0 0 0 5px var(--bg); }
+/* "Next up" (Overview) — same square-card look as the marketing page's
+   dashboard mockup (index.html's .event-grid/.event-card). */
+.next-up-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+.next-up-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+}
+.next-up-card .date {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.next-up-card .title { font-weight: 600; font-size: 0.92rem; margin: 6px 0 2px; }
+.next-up-card .meta { color: var(--muted); font-size: 0.8rem; }
 
 /* Month + week calendar strip (Events) */
 .calendar-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
