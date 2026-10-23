@@ -187,6 +187,44 @@ if (session) {
 
     eventCancelBtn.addEventListener("click", resetEventForm);
 
+    // ── EVENTS: 15-minute times + end defaults to the start's date ──────────
+    // step="900" on the inputs isn't honored by every browser's picker, so
+    // snap the minutes to :00/:15/:30/:45 here too. Values stay as naive
+    // "YYYY-MM-DDTHH:MM" strings (see toLocalDateTimeInputValue).
+    const eventStartInput = document.getElementById("event-start");
+    const eventEndInput = document.getElementById("event-end");
+
+    function formatDateTimeInput(d) {
+        const pad = n => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function snapToQuarterHour(input) {
+        if (!input.value) return;
+        const d = new Date(input.value);
+        d.setMinutes(Math.round(d.getMinutes() / 15) * 15, 0, 0);
+        input.value = formatDateTimeInput(d);
+    }
+
+    eventStartInput.addEventListener("change", () => {
+        snapToQuarterHour(eventStartInput);
+        if (!eventStartInput.value) return;
+        const start = new Date(eventStartInput.value);
+        // Most events start and end the same day: move the end onto the
+        // start's date (keeping its time if one was already picked), so only
+        // the end time needs changing. Falls back to start + 1 hour when no
+        // end time is set yet or the result would end before it starts.
+        let end;
+        if (eventEndInput.value) {
+            end = new Date(eventEndInput.value);
+            end.setFullYear(start.getFullYear(), start.getMonth(), start.getDate());
+        }
+        if (!end || end <= start) end = new Date(start.getTime() + 60 * 60 * 1000);
+        eventEndInput.value = formatDateTimeInput(end);
+    });
+
+    eventEndInput.addEventListener("change", () => snapToQuarterHour(eventEndInput));
+
     // ── EVENTS: month/week calendar strip ───────────────────────────────────
     // Purely a glance widget (which days this week/month have something on) —
     // navigating it doesn't filter the Upcoming/Past lists below, it just
@@ -333,7 +371,13 @@ if (session) {
                 document.getElementById("events-form-title").textContent = "Edit event";
                 document.getElementById("event-submit-btn").textContent = "Save changes";
                 eventCancelBtn.style.display = "inline-flex";
-                eventRepeatField.style.display = "none"; // repeat only applies when creating a new series
+                // Repeat is offered on edit only for one-offs (owner forgot to
+                // pick it when posting) — on an existing series it would add
+                // a second copy of every date. Same title key as groupEventsByTitle.
+                const key = (ev.title || "").trim().toLowerCase();
+                const inSeries = events.filter(e => (e.title || "").trim().toLowerCase() === key).length > 1;
+                document.getElementById("event-repeat").value = "none";
+                eventRepeatField.style.display = inSeries ? "none" : "";
                 eventForm.scrollIntoView({ behavior: "smooth" });
             });
         }
@@ -431,7 +475,8 @@ if (session) {
                 description: document.getElementById("event-desc").value.trim() || null,
                 startAt: `${document.getElementById("event-start").value}:00`,
                 endAt: `${document.getElementById("event-end").value}:00`,
-                imageBytes: imageFile ? await HW.fileToBase64(imageFile) : null
+                imageBytes: imageFile ? await HW.fileToBase64(imageFile) : null,
+                repeat: document.getElementById("event-repeat").value
             };
 
             if (editingId) {
@@ -440,7 +485,6 @@ if (session) {
                     body: JSON.stringify(Object.assign({ breweryId }, payload))
                 });
             } else {
-                payload.repeat = document.getElementById("event-repeat").value;
                 await HW.apiJson(`/api/breweries/${breweryId}/events`, {
                     method: "POST",
                     body: JSON.stringify(payload)
@@ -466,18 +510,51 @@ if (session) {
                 <div class="offer">${escapeHtml(s.message)}</div>
                 <div class="date">${formatDate(s.date)}</div>
                 <div class="item-actions">
+                    <button class="btn-pill outline" data-action="edit">Edit</button>
                     <button class="btn-pill danger" data-action="delete">Delete</button>
                 </div>
             </div>
         `;
     }
 
-    function wireSpecialRow(row) {
+    const specialRepeatField = document.getElementById("special-repeat-field");
+    const specialCancelBtn = document.getElementById("special-cancel-btn");
+
+    function resetSpecialForm() {
+        specialForm.reset();
+        document.getElementById("special-id").value = "";
+        document.getElementById("specials-form-title").textContent = "New special";
+        document.getElementById("special-submit-btn").textContent = "Post Special";
+        specialCancelBtn.style.display = "none";
+        specialRepeatField.style.display = "";
+    }
+
+    specialCancelBtn.addEventListener("click", resetSpecialForm);
+
+    function wireSpecialRow(row, specials) {
         const id = row.dataset.id;
+        const s = specials.find(x => String(x.id) === id);
+        row.querySelector('[data-action="edit"]').addEventListener("click", () => {
+            document.getElementById("special-id").value = s.id;
+            document.getElementById("special-message").value = s.message || "";
+            document.getElementById("special-date").value = toDateInputValue(s.date);
+            document.getElementById("specials-form-title").textContent = "Edit special";
+            document.getElementById("special-submit-btn").textContent = "Save changes";
+            specialCancelBtn.style.display = "inline-flex";
+            // Same rule as events: repeat on edit only for one-offs, or an
+            // existing series would get a second copy of every date. Same
+            // message key as groupSpecialsByMessage.
+            const key = (s.message || "").trim().toLowerCase();
+            const inSeries = specials.filter(x => (x.message || "").trim().toLowerCase() === key).length > 1;
+            document.getElementById("special-repeat").value = "none";
+            specialRepeatField.style.display = inSeries ? "none" : "";
+            specialForm.scrollIntoView({ behavior: "smooth" });
+        });
         row.querySelector('[data-action="delete"]').addEventListener("click", async () => {
             if (!confirm("Delete this special?")) return;
             try {
                 await HW.apiJson(`/api/specials/${id}`, { method: "DELETE" });
+                if (document.getElementById("special-id").value === id) resetSpecialForm();
                 loadSpecials();
             } catch (err) {
                 HW.showAlert(specialsAlert, err.message);
@@ -537,7 +614,7 @@ if (session) {
                 return;
             }
             el.innerHTML = groupSpecialsByMessage(upcoming).slice(0, 40).map(g => renderSpecialGroup(g)).join("");
-            el.querySelectorAll(".item-row").forEach(row => wireSpecialRow(row));
+            el.querySelectorAll(".ticket-card").forEach(row => wireSpecialRow(row, specials));
             wireSeriesToggles(el);
         } catch (err) {
             HW.showAlert(specialsAlert, err.message);
@@ -547,6 +624,7 @@ if (session) {
     specialForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         HW.hideAlert(specialsAlert);
+        const editingId = document.getElementById("special-id").value;
         const imageFile = document.getElementById("special-image").files[0];
 
         try {
@@ -556,11 +634,18 @@ if (session) {
                 repeat: document.getElementById("special-repeat").value,
                 imageBytes: imageFile ? await HW.fileToBase64(imageFile) : null
             };
-            await HW.apiJson(`/api/breweries/${breweryId}/specials`, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            });
-            specialForm.reset();
+            if (editingId) {
+                await HW.apiJson(`/api/specials/${editingId}`, {
+                    method: "PUT",
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                await HW.apiJson(`/api/breweries/${breweryId}/specials`, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+            }
+            resetSpecialForm();
             loadSpecials();
         } catch (err) {
             HW.showAlert(specialsAlert, err.message);
@@ -791,6 +876,20 @@ if (session) {
         });
     });
 
+    const logoInput = document.getElementById("brewery-logo");
+    const logoPreview = document.getElementById("brewery-logo-preview");
+
+    function showLogoPreview(src) {
+        logoPreview.style.display = src ? "" : "none";
+        if (src) logoPreview.src = src;
+    }
+
+    // Preview the picked file right away; it's only uploaded on Save.
+    logoInput.addEventListener("change", () => {
+        const file = logoInput.files[0];
+        if (file) showLogoPreview(URL.createObjectURL(file));
+    });
+
     async function loadProfile() {
         document.getElementById("password-email-display").textContent = session.email || "your account email";
 
@@ -799,6 +898,7 @@ if (session) {
             document.getElementById("brewery-name").value = summary.breweryName || "";
             document.getElementById("brewery-address").value = summary.streetAddress || "";
             document.getElementById("brewery-nickname").value = summary.locationNickname || "";
+            showLogoPreview(summary.logoBytes ? `data:image/jpeg;base64,${summary.logoBytes}` : null);
         } catch (err) {
             console.error(err);
         }
@@ -873,6 +973,7 @@ if (session) {
         HW.hideAlert(alertEl);
         const nickname = document.getElementById("brewery-nickname").value.trim();
         const streetAddress = document.getElementById("brewery-address").value.trim();
+        const logoFile = logoInput.files[0];
         try {
             await HW.apiJson(`/api/breweries/${breweryId}`, {
                 method: "PUT",
@@ -880,9 +981,12 @@ if (session) {
                     breweryName: document.getElementById("brewery-name").value.trim() || null,
                     streetAddress: streetAddress || null,
                     phoneNumber: document.getElementById("brewery-phone").value.trim() || null,
-                    locationNickname: nickname
+                    locationNickname: nickname,
+                    // null leaves the current logo untouched (UpdateBrewery is partial)
+                    logoPhotoUrl: logoFile ? await HW.fileToBase64(logoFile) : null
                 })
             });
+            logoInput.value = "";
             session.breweryName = document.getElementById("brewery-name").value.trim();
             session.nickname = nickname || null;
             HW.setSession(session);

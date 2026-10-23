@@ -88,11 +88,11 @@
                         <div class="field-row">
                             <div class="field">
                                 <label for="event-start">Starts</label>
-                                <input type="datetime-local" id="event-start" required>
+                                <input type="datetime-local" id="event-start" step="900" required>
                             </div>
                             <div class="field">
                                 <label for="event-end">Ends</label>
-                                <input type="datetime-local" id="event-end" required>
+                                <input type="datetime-local" id="event-end" step="900" required>
                             </div>
                         </div>
                         <div class="field" id="event-repeat-field">
@@ -153,9 +153,10 @@
                 <div class="card" style="margin-bottom:28px;">
                     <div class="section-card-head">
                         <div class="section-icon icon-amber">$</div>
-                        <div><h2 style="font-size:1rem;">New special</h2></div>
+                        <div><h2 id="specials-form-title" style="font-size:1rem;">New special</h2></div>
                     </div>
                     <form id="special-form">
+                        <input type="hidden" id="special-id">
                         <div class="field">
                             <label for="special-message">Message</label>
                             <input type="text" id="special-message" placeholder="$2 off pints, 4–6pm" required>
@@ -165,7 +166,7 @@
                                 <label for="special-date">Date</label>
                                 <input type="date" id="special-date" required>
                             </div>
-                            <div class="field">
+                            <div class="field" id="special-repeat-field">
                                 <label for="special-repeat">Repeats</label>
                                 <select id="special-repeat">
                                     <option value="none">Doesn't repeat</option>
@@ -179,7 +180,10 @@
                             <label for="special-image">Photo <span class="hint">(optional)</span></label>
                             <input type="file" id="special-image" accept="image/*">
                         </div>
-                        <button type="submit" class="btn-pill primary" id="special-submit-btn">Post Special</button>
+                        <div style="display:flex; gap:10px;">
+                            <button type="submit" class="btn-pill primary" id="special-submit-btn">Post Special</button>
+                            <button type="button" class="btn-pill outline" id="special-cancel-btn" style="display:none;">Cancel</button>
+                        </div>
                     </form>
                 </div>
                 <div class="ticket-grid" id="specials-list"></div>
@@ -383,6 +387,13 @@
                     </div>
                     <form id="brewery-info-form">
                         <div class="field">
+                            <label for="brewery-logo">Logo <span class="hint">(shown on your brewery's page in the app)</span></label>
+                            <div style="display:flex; align-items:center; gap:14px;">
+                                <img id="brewery-logo-preview" alt="Current logo" style="display:none; width:72px; height:72px; object-fit:cover; border-radius:50%; border:1px solid rgba(0,0,0,0.12);">
+                                <input type="file" id="brewery-logo" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="field">
                             <label for="brewery-name">Brewery name</label>
                             <input type="text" id="brewery-name">
                         </div>
@@ -581,6 +592,6 @@
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=14"></script>
+    <script src="assets/dashboard.js?v=16"></script>
 </body>
 </html>
