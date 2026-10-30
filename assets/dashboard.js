@@ -5,6 +5,19 @@ if (session) {
     const breweryId = session.breweryId;
     document.getElementById("topbar-tagline").textContent = session.breweryName ? `for ${session.breweryName}` : "for Brewery Owners";
 
+    // ── ADMIN MODE ───────────────────────────────────────────────────────────
+    // A site admin acting as this brewery (set by admin.html). Everything
+    // works as the brewery itself, except the password reset card, which
+    // would email a code to the brewery rather than the admin.
+    const actingAsAdmin = !!(session.actingAsAdmin && HW.getAdminSession());
+    if (actingAsAdmin) {
+        document.getElementById("admin-acting-name").textContent = session.nickname
+            ? `${session.breweryName} (${session.nickname})`
+            : (session.breweryName || "this brewery");
+        document.getElementById("admin-acting-bar").hidden = false;
+        document.getElementById("password-card").hidden = true;
+    }
+
     // ── NAV / VIEW SWITCHING ─────────────────────────────────────────────────
     const navItems = document.querySelectorAll(".dash-nav-item[data-view]");
     const views = document.querySelectorAll(".dash-view");
@@ -27,6 +40,7 @@ if (session) {
     navItems.forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.view)));
     document.getElementById("logout-btn").addEventListener("click", () => {
         HW.clearSession();
+        HW.clearAdminSession();
         window.location.href = "login.html";
     });
 
@@ -1667,7 +1681,8 @@ if (session) {
                 breweryName: result.breweryName,
                 nickname: result.locationNickname || null,
                 email: session.email,
-                role: session.role
+                role: session.role,
+                actingAsAdmin: session.actingAsAdmin || false
             });
             window.location.reload();
         } catch (err) {

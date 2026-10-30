@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — HopWire for Brewery Owners</title>
-    <link rel="stylesheet" href="assets/styles.css?v=16">
+    <link rel="stylesheet" href="assets/styles.css?v=17">
 </head>
 <body class="dash-body">
     <div class="dash-topbar">
         <span class="name"><span class="hop">Hop</span><span class="wire">Wire</span></span>
         <span class="tagline nav-text" id="topbar-tagline">for Brewery Owners</span>
+    </div>
+    <div class="admin-acting-bar" id="admin-acting-bar" hidden>
+        <span>Admin mode: you're managing <strong id="admin-acting-name"></strong>'s page.</span>
+        <a href="admin.html">Switch brewery</a>
     </div>
 
     <div class="dash-shell">
@@ -499,7 +503,7 @@
                     </form>
                 </div>
 
-                <div class="card" style="margin-top:24px;">
+                <div class="card" style="margin-top:24px;" id="password-card">
                     <div class="section-card-head">
                         <div class="section-icon icon-amber">P</div>
                         <div><h2 style="font-size:1rem;">Password</h2><p class="section-sub" id="password-step1-sub">Send a reset code to your account email to update your password.</p></div>
@@ -588,10 +592,10 @@
         </div>
     </div>
 
-    <script src="assets/app.js?v=4"></script>
+    <script src="assets/app.js?v=5"></script>
     <script>
         const session = HW.requireSession();
     </script>
-    <script src="assets/dashboard.js?v=16"></script>
+    <script src="assets/dashboard.js?v=17"></script>
 </body>
 </html>

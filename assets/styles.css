@@ -752,3 +752,47 @@ body.dash-body {
 @media (max-width: 760px) {
     .nav-text { display: none; }
 }
+
+/* ============================================================
+   Admin console (admin.html) + the "acting as" bar it puts on the
+   dashboard when an admin is managing a brewery's page.
+   ============================================================ */
+.admin-topbar-link {
+    margin-left: auto; align-self: center;
+    background: rgba(255, 255, 255, 0.14); color: #fff; border: 0;
+    border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; text-decoration: none; white-space: nowrap;
+}
+.admin-topbar-link:hover { background: rgba(255, 255, 255, 0.26); }
+.admin-main { flex: 1; overflow-y: auto; padding: 32px 40px; width: 100%; max-width: 760px; margin: 0 auto; }
+.admin-results { display: flex; flex-direction: column; margin-top: 12px; }
+.admin-result {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: 100%; text-align: left; font: inherit; color: var(--ink);
+    background: transparent; border: 0; border-top: 1px solid var(--line);
+    padding: 12px 6px; cursor: pointer;
+}
+.admin-result:hover { background: var(--accent-soft); }
+.admin-result:disabled { opacity: 0.5; cursor: wait; }
+.admin-result-main { display: flex; flex-direction: column; min-width: 0; }
+.admin-result-main strong { font-size: 0.95rem; }
+.admin-result-main .addr { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+.admin-nick { color: var(--muted); font-weight: 500; }
+.admin-tag {
+    flex-shrink: 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 4px 10px; border-radius: 999px; background: var(--line); color: var(--muted);
+}
+.admin-tag.claimed { background: var(--chart-green-soft); color: var(--chart-green); }
+.admin-empty { color: var(--muted); font-size: 0.9rem; padding: 12px 6px 0; }
+.admin-signed-in { color: var(--muted); font-size: 0.85rem; margin-top: 14px; }
+.admin-acting-bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex-shrink: 0;
+    padding: 8px 24px; background: var(--amber-soft); color: var(--ink);
+    border-bottom: 1px solid rgba(232, 161, 60, 0.35); font-size: 0.88rem;
+}
+.admin-acting-bar a { margin-left: auto; font-weight: 700; }
+.admin-acting-bar[hidden], #password-card[hidden] { display: none; }
+@media (max-width: 900px) {
+    .admin-main { padding: 24px 16px; }
+    .admin-acting-bar { padding: 8px 16px; }
+}

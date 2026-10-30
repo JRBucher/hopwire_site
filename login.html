@@ -43,7 +43,7 @@
         </div>
     </div>
 
-    <script src="assets/app.js?v=4"></script>
+    <script src="assets/app.js?v=5"></script>
     <script>
         const form = document.getElementById("login-form");
         const alertEl = document.getElementById("alert");
@@ -69,6 +69,15 @@
 
                 if (!res.ok) {
                     throw new Error((body && body.message) || "Invalid email or password.");
+                }
+
+                // Admin logins (email on the API's Admin:Emails allowlist) go to
+                // the admin console, whatever kind of account they are.
+                if (body.adminToken) {
+                    HW.clearSession();
+                    HW.setAdminSession({ token: body.adminToken, email: body.email });
+                    window.location.href = "admin.html";
+                    return;
                 }
 
                 if (!body.role || !body.role.startsWith("business_")) {

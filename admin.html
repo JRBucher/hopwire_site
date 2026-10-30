@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Admin — HopWire</title>
+    <link rel="stylesheet" href="assets/styles.css?v=17">
+</head>
+<body class="dash-body">
+    <div class="dash-topbar">
+        <span class="name"><span class="hop">Hop</span><span class="wire">Wire</span></span>
+        <span class="tagline nav-text">Admin</span>
+        <button type="button" class="admin-topbar-link" id="admin-logout">Log out</button>
+    </div>
+
+    <main class="admin-main">
+        <div class="dash-head">
+            <div>
+                <h1>Post for a brewery</h1>
+                <p>Search any brewery, claimed or not, and manage its page as if you were logged in as them.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="alert" id="alert"></div>
+            <div class="field" style="margin-bottom:0;">
+                <label for="admin-search">Brewery</label>
+                <input type="search" id="admin-search" placeholder="Name, address, or nickname" autocomplete="off" autofocus>
+            </div>
+            <div class="admin-results" id="admin-results"></div>
+        </div>
+        <p class="admin-signed-in">Signed in as <strong id="admin-email"></strong></p>
+    </main>
+
+    <script src="assets/app.js?v=5"></script>
+    <script>
+        (() => {
+            const admin = HW.getAdminSession();
+            if (!admin || !admin.token) { window.location.href = "login.html"; return; }
+
+            const searchEl = document.getElementById("admin-search");
+            const resultsEl = document.getElementById("admin-results");
+            const alertEl = document.getElementById("alert");
+            document.getElementById("admin-email").textContent = admin.email || "";
+
+            document.getElementById("admin-logout").addEventListener("click", () => {
+                HW.clearSession();
+                HW.clearAdminSession();
+                window.location.href = "login.html";
+            });
+
+            function escapeHtml(str) {
+                return (str ?? "").toString().replace(/[&<>"']/g, c => ({
+                    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+                }[c]));
+            }
+
+            // Debounced so typing doesn't fire a request per keystroke; `seq`
+            // drops responses that arrive after a newer search was sent.
+            let timer = null, seq = 0;
+            searchEl.addEventListener("input", () => {
+                clearTimeout(timer);
+                timer = setTimeout(search, 250);
+            });
+
+            async function search() {
+                const term = searchEl.value.trim();
+                const mine = ++seq;
+                HW.hideAlert(alertEl);
+                if (term.length < 2) { resultsEl.innerHTML = ""; return; }
+
+                try {
+                    const rows = await HW.adminJson(`/api/admin/breweries?term=${encodeURIComponent(term)}`);
+                    if (mine !== seq) return;
+                    resultsEl.innerHTML = rows.length
+                        ? rows.map(b => `
+                            <button type="button" class="admin-result" data-id="${b.breweryId}">
+                                <span class="admin-result-main">
+                                    <strong>${escapeHtml(b.breweryName)}${b.locationNickname ? ` <span class="admin-nick">· ${escapeHtml(b.locationNickname)}</span>` : ""}</strong>
+                                    <span class="addr">${escapeHtml(b.streetAddress)}</span>
+                                </span>
+                                <span class="admin-tag${b.isClaimed ? " claimed" : ""}">${b.isClaimed ? "Claimed" : "Unclaimed"}</span>
+                            </button>`).join("")
+                        : `<p class="admin-empty">No breweries match “${escapeHtml(term)}”.</p>`;
+                } catch (err) {
+                    if (mine === seq) HW.showAlert(alertEl, err.message);
+                }
+            }
+
+            resultsEl.addEventListener("click", async (e) => {
+                const item = e.target.closest(".admin-result");
+                if (!item) return;
+                HW.hideAlert(alertEl);
+                item.disabled = true;
+
+                try {
+                    const result = await HW.adminJson(`/api/admin/act-as`, {
+                        method: "POST",
+                        body: JSON.stringify({ breweryId: parseInt(item.dataset.id, 10) })
+                    });
+                    HW.setSession({
+                        token: result.token,
+                        breweryId: result.breweryId,
+                        breweryName: result.breweryName,
+                        email: null,
+                        role: result.role,
+                        nickname: result.locationNickname || null,
+                        actingAsAdmin: true
+                    });
+                    window.location.href = "dashboard.html";
+                } catch (err) {
+                    HW.showAlert(alertEl, err.message);
+                    item.disabled = false;
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
