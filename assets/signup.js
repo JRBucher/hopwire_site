@@ -357,6 +357,9 @@ document.getElementById("create-account-btn").addEventListener("click", async (e
         // ── Notify HopWire of the new signup (best-effort, fire-and-forget) ──
         fetch(`${HW.API_BASE}/api/notifications/new-brewery`, {
             method: "POST",
+            // keepalive lets the request finish even though we navigate away
+            // on the next line — without it the browser cancels it mid-flight.
+            keepalive: true,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ BreweryId: body.id, BreweryName: state.breweryName, Address: state.address })
         }).catch(() => {});
